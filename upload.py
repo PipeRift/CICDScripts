@@ -61,8 +61,8 @@ def PrepareVault(vault_path):
         # Initialize vault repository without downloading lfs files of previous builds
         subprocess.check_call(["mkdir", "Vault"], shell=True, cwd=env.project_path)
         subprocess.check_call(["git", "init"], shell=True, cwd=vault_path)
-        subprocess.check_call(["git", "lfs install --skip-smudge"], shell=True, cwd=vault_path)
-        subprocess.check_call(["git", "remote add origin", vault_url], shell=True, cwd=vault_path)
+        subprocess.check_call(["git", "lfs", "install", "--skip-smudge"], shell=True, cwd=vault_path)
+        subprocess.check_call(["git", "remote", "add", "origin", vault_url], shell=True, cwd=vault_path)
         subprocess.check_call(["git", "fetch"], shell=True, cwd=vault_path)
     except subprocess.CalledProcessError as e:
         print("Unable to prepare vault '%s'" % e)
@@ -71,10 +71,10 @@ def PrepareVault(vault_path):
 
 def PushFilesToVault(vault_path):
     try:
-        subprocess.check_call(["git", "add --all"], shell=True, cwd=vault_path)
+        subprocess.check_call(["git", "add", "--all"], shell=True, cwd=vault_path)
         commit_message = "[" + env.plugin + "] Added packaged files (" + env.dot_version + ") \n\n Pipeline: " + env.pipeline_url
-        subprocess.check_call(["git", "commit -m ", commit_message], shell=True, cwd=vault_path)
-        subprocess.check_call(["git", "push origin master"], shell=True, cwd=vault_path)
+        subprocess.check_call(["git", "commit", '-m "', commit_message, '"'], shell=True, cwd=vault_path)
+        subprocess.check_call(["git", "push", "origin", "master"], shell=True, cwd=vault_path)
     except subprocess.CalledProcessError as e:
         print("Unable to push files '%s'" % e)
         return -1
