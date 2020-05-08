@@ -73,7 +73,7 @@ def PushFilesToVault(vault_path):
     try:
         subprocess.check_call(["git", "add", "--all"], shell=True, cwd=vault_path)
         commit_message = "[" + env.plugin + "] Added packaged files (" + env.dot_version + ") \n\n Pipeline: " + env.pipeline_url
-        subprocess.check_call(["git", "commit", '-m "', commit_message, '"'], shell=True, cwd=vault_path)
+        subprocess.check_call(["git", "commit", '-m "' + commit_message + '"'], shell=True, cwd=vault_path)
         subprocess.check_call(["git", "push", "origin", "master"], shell=True, cwd=vault_path)
     except subprocess.CalledProcessError as e:
         print("Unable to push files '%s'" % e)
