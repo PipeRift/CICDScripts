@@ -38,7 +38,7 @@ def main():
     if error != 0:
         return error
 
-    print("\n-- Create cloud folder")
+    print("\n-- Create destination folder")
     vault_file_path = path.join(vault_path, env.plugin, "Last", env.commit_ref_name)
     if not path.exists(vault_file_path):
         os.makedirs(vault_file_path)
@@ -72,6 +72,7 @@ def PrepareVault(vault_path):
 
         subprocess.check_call(["git", "remote", "add", "origin", vault_url], shell=True, cwd=vault_path)
         subprocess.check_call(["git", "fetch"], shell=True, cwd=vault_path)
+        subprocess.check_call(["git", "checkout", "master"], shell=True, cwd=vault_path)
     except subprocess.CalledProcessError as e:
         print("Unable to prepare vault '%s'" % e)
         return -1
