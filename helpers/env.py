@@ -50,6 +50,8 @@ def init(args):
     # Pipeline
     global pipeline_url
     pipeline_url = environ.get('CI_PIPELINE_URL')
+    global vault_token
+    vault_token = environ.get('vault_token')
 
     if plugin is None or engine_version is None:
         print("Missing environment variables 'plugin' or 'engine_version'")
