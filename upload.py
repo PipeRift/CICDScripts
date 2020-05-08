@@ -64,8 +64,8 @@ def PrepareVault(vault_path):
         subprocess.check_call(["git", "init"], shell=True, cwd=vault_path)
         subprocess.check_call(["git", "lfs", "install", "--skip-smudge"], shell=True, cwd=vault_path)
 
-        subprocess.check_call(["git", "config", 'user.name "Build Bot"'], shell=True, cwd=vault_path)
-        subprocess.check_call(["git", "config", 'user.email "info@piperift.com"'], shell=True, cwd=vault_path)
+        subprocess.check_call(["git", "config", "user.name", "Build Bot"], shell=True, cwd=vault_path)
+        subprocess.check_call(["git", "config", "user.email", "info@piperift.com"], shell=True, cwd=vault_path)
 
         subprocess.check_call(["git", "remote", "add", "origin", vault_url], shell=True, cwd=vault_path)
         subprocess.check_call(["git", "fetch"], shell=True, cwd=vault_path)
