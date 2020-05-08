@@ -39,7 +39,7 @@ def main():
         return error
 
     print("\n-- Create destination folder")
-    vault_file_path = path.join(vault_path, env.plugin, "Last", env.commit_ref_name)
+    vault_file_path = path.join(vault_path, env.plugin, env.commit_ref_name)
     if not path.exists(vault_file_path):
         os.makedirs(vault_file_path)
 
