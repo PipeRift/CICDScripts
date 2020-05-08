@@ -58,6 +58,9 @@ def PrepareVault(vault_path):
     vault_url = "https://gitlab.com/piperift/ci-cd/vault.git"
 
     try:
+        subprocess.check_call(["git", "config", '--global user.name "Build Bot"'])
+        subprocess.check_call(["git", "config", '--global user.email "info@piperift.com"'])
+
         # Initialize vault repository without downloading lfs files of previous builds
         subprocess.check_call(["mkdir", "Vault"], shell=True, cwd=env.project_path)
         subprocess.check_call(["git", "init"], shell=True, cwd=vault_path)
