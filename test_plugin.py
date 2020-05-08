@@ -4,7 +4,7 @@ from os import path
 import shutil
 
 import helpers
-from helpers import env, ue4
+from helpers import env, ue4, test_report
 
 
 def main():
@@ -26,7 +26,6 @@ def main():
 
     result = ue4.test(env)
 
-    from libs import test_report
     test_report.generate(env)
 
     return result
@@ -57,7 +56,7 @@ def CreateHostProject():
 	# Get the plugin directory in the host project, and copy all the files in
     build_plugin_dir = path.join(env.build_path, env.plugin + "_" + env.compact_version)
 
-    #Ignore Intermediates folder
+    #Ignore Intermediates, Docs and Scripts folders
     to_exclude = [path.join(build_plugin_dir, "Intermediates")]
     def IgnoredPaths(path, filenames):
         ret = []
