@@ -6,7 +6,9 @@ if commit_ref_name is None:
     commit_ref_name = "no_branch"
 
 
+
 def init(args):
+    # Plugin
     global plugin
     if len(args) > 0 and args[0] != None:
         plugin = args[0]
@@ -32,7 +34,7 @@ def init(args):
     if dot_version is not None:
         engine_path = path.join(environ.get('ProgramW6432'), "Epic Games", "UE_" + dot_version)
 
-
+    # Project
     global project_path, build_path, test_path
     if len(args) > 2 and args[2] != None:
         project_path = args[2]
@@ -45,6 +47,9 @@ def init(args):
     else:
         build_path = test_path = None
 
+    # Pipeline
+    global pipeline_url
+    pipeline_url = environ.get('CI_PIPELINE_URL')
 
     if plugin is None or engine_version is None:
         print("Missing environment variables 'plugin' or 'engine_version'")
