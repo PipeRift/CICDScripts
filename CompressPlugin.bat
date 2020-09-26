@@ -63,7 +63,6 @@ if errorlevel 1  ( exit 1 )
 
 echo -- Compress Plugin
 call "!lib_path!/bin/7z" a !build_path!/!plugin!!compact_version!.zip !build_path!/!plugin! > nul
-if errorlevel 1  ( exit 1 )
 
 echo.
 rmdir "!build_path!\!plugin!" /S /Q > nul
