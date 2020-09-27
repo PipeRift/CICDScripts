@@ -1,8 +1,8 @@
+import warnings
 from os import path
-from datetime import datetime
+from datetime import datetime, timedelta
 
 from .util import install
-install('junit_xml')
 install('parse')
 
 from junit_xml import TestSuite, TestCase
@@ -21,9 +21,17 @@ def parse_long_name(test):
     del namespaces[-1]
     test["namespaces"] = '.'.join(namespaces)
 
-def parse_test(result):
-    test = result["test"]
+def create_test(parse_result):
+    test = parse_result["test"]
+
+    if 'start_date' not in test:
+        test['start_date'] = None
+    if 'finish_date' not in test:
+        test['finish_date'] = None
+
     parse_long_name(test)
+    test["result"] = "Skip"
+    test["events"] = []
     return test
 
 def insert_to_folders(root_folder, test):
@@ -38,8 +46,11 @@ def insert_to_folders(root_folder, test):
             folder['tests'] = []
         folder['tests'].append(test)
 
-def operate_test(test):
-    test['elapsed'] = test['final_date'] - test['start_date']
+def set_elapsed(test):
+        if ('start_date' in test and 'finish_date' in test) and (test['start_date'] is not None and test['finish_date'] is not None):
+            test['elapsed'] = test['finish_date'] - test['start_date']
+        else:
+            test['elapsed'] = timedelta()
 
 def generate_junit_tests(root_folder):
     suites = []
@@ -52,10 +63,21 @@ def generate_junit_tests(root_folder):
             for test in folder['tests']:
                 status = test['result'];
 
-                case = TestCase(test['name'], test['long_name'], 0, None, '\n'.join(test['events']), None, test['start_date'], status)
+                case = TestCase(
+                    test['name'],
+                    test['long_name'],
+                    test['elapsed'].total_seconds(),
+                    ''.join(test['events']),
+                    None,
+                    None,
+                    None,
+                    status)
 
-                if status == "Failed":
-                    case.failure_message = '\n'.join(test['events'])
+                if status == 'Skip':
+                    case.add_skipped_info(" ")
+                elif status == 'Failed':
+                    case.add_failure_info(" ")
+
                 test_cases.append(case)
 
         suite = TestSuite(folderId, test_cases)
@@ -64,58 +86,78 @@ def generate_junit_tests(root_folder):
     return suites
 
 
-def generate(env):
+def generateFromEnv(env):
     log_file = path.join(env.test_path, "Saved", "Logs", "HostProject.log")
     report_file = path.join(env.test_path, "Report.xml")
 
+    generate(log_file, report_file)
+
+def generate(log_file, report_file):
     test_folder = {}
 
     # Open input file in 'read' mode
     with open(log_file, "r") as file:
-        test_recording = None
+        last_started_test = None
+        active_test_events = None
         tests = {}
 
         # Loop over each log line
         for line in file:
-            result = parse(
-                "[{test[start_date]:date}][{}]LogAutomationController: {log_type}: Running Automation: '{test[long_name]}' (Class Name: '{}')",
-                line,
-                dict(date=parse_date))
 
+            # Test listed
+            result = parse("[{}][{}]LogAutomationCommandLine: Display: 	{test[long_name]}", line)
             if result is not None:
-                test = parse_test(result)
-                test["events"] = []
+                test = create_test(result)
                 tests[test["long_name"]] = test
                 continue
 
+
+            # Test started
             result = parse(
-                "[{test[final_date]:date}][{}]LogAutomationController: {log_type}: Automation Test {test[result]:result} ({} - {test[long_name]})",
+                "[{test[start_date]:date}][{}]LogAutomationController: Display: Test Started. Name={{{test[name]}}}",
                 line,
                 dict(date=parse_date, result=parse_result))
-
             if result is not None:
-                test = parse_test(result)
-                tests[test["long_name"]].update(test)
+                last_started_test = result["test"]
                 continue
 
-            if test_recording is None:
+            # Test completed
+            result = parse(
+                "[{test[finish_date]:date}][{}]LogAutomationController: Display: Test Completed. Result={{{test[result]:result}}} Name={} Path={{{test[long_name]}}}",
+                line,
+                dict(date=parse_date, result=parse_result))
+            if result is not None:
+                parsed_test = result["test"]
+
+                if last_started_test is not None:
+                    parsed_test['start_date'] = last_started_test['start_date']
+
+                test_name = parsed_test["long_name"]
+                if test_name in tests:
+                    tests[test_name].update(parsed_test)
+                else:
+                    warnings.warn("Test {} has not been listed!", test_name)
+                continue
+
+            # Record test events
+            if active_test_events is None:
+                # Test Events begin
                 result = parse("[{}][{}]LogAutomationController: BeginEvents: {long_name}", line)
                 if result is not None:
-                    test_recording = result["long_name"]
+                    active_test_events = result['long_name']
             else:
+                # Test Events end
                 result = parse("[{}][{}]LogAutomationController: EndEvents: {long_name}", line)
                 if result is not None:
-                    test_recording = None
+                    active_test_events = None
                     continue
 
                 result = parse("[{}][{}]LogAutomationController: {event}", line)
-                if result is None:
-                    continue
-
-                tests[test_recording]["events"].append(result["event"])
+                if result is not None:
+                    tests[active_test_events]["events"].append(result["event"])
 
         for test in tests:
-            operate_test(tests[test])
+            set_elapsed(tests[test])
             insert_to_folders(test_folder, tests[test])
 
     suites = generate_junit_tests(test_folder)

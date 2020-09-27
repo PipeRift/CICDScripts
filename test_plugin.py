@@ -26,7 +26,7 @@ def main():
 
     result = ue4.test(env)
 
-    test_report.generate(env)
+    test_report.generateFromEnv(env)
 
     return result
 

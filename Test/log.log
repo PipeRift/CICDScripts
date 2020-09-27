@@ -1,0 +1,109 @@
+LogInit: Display: Running engine for game: HostProject
+LogPluginManager: Mounting plugin SaveExtension
+LogInit: Using libcurl 7.55.1-DEV
+LogInit: Compiled with Visual C++: 19.24.28315.00
+LogInit: Installed Engine Build: 1
+LogDevObjectVersion: Number of dev versions registered: 26
+LogInit: Presizing for max 25165824 objects, including 0 objects not considered by GC, pre-allocating 0 bytes for permanent pool.
+LogInit: Object subsystem initialized
+[2020.09.26-14.44.34:528][  0]LogConfig: Setting CVar [[con.DebugEarlyDefault:1]]
+[2020.09.26-14.44.39:673][  0]LogShaderCompilers: Cannot use XGE Shader Compiler as Incredibuild is not installed on this machine.
+[2020.09.26-14.44.47:618][  0]LogAudioMixer: Display: Creating Master Submix 'MasterEQSubmixDefault'
+[2020.09.26-14.44.48:297][  0]LogLoad: Took 0.240508 seconds to LoadMap(/Engine/Maps/Entry)
+[2020.09.26-14.44.48:337][  0]LogLoad: (Engine Initialization) Total Blueprint compile time: 0.00 seconds
+[2020.09.26-14.44.48:365][  1]Automation: RunTests='SaveExtension' Queued.
+[2020.09.26-14.44.48:370][  1]Automation: Quit Command Queued.
+[2020.09.26-14.45.10:794][  5]LogAutomationTest: Warning: Automation Test 'FClientFunctionalTestingMapsRuntime' took > 10 seconds to return from GetTests(...): 14.37s
+[2020.09.26-14.45.10:857][  6]LogAutomationCommandLine: Display: Found 15 Automation Tests, based on 'SaveExtension'.
+[2020.09.26-14.45.10:862][  6]LogAutomationCommandLine: Display: 	SaveExtension.Files.Can load files synchronously
+[2020.09.26-14.45.10:874][  6]LogAutomationCommandLine: Display: 	SaveExtension.Files.Can save files asynchronously
+[2020.09.26-14.45.10:885][  6]LogAutomationCommandLine: Display: 	SaveExtension.Files.Can save files synchronously
+[2020.09.26-14.45.10:896][  6]LogAutomationCommandLine: Display: 	SaveExtension.Serialization.Properties.bool
+[2020.09.26-14.45.10:908][  6]LogAutomationCommandLine: Display: 	SaveExtension.Serialization.Properties.int16
+[2020.09.26-14.45.10:919][  6]LogAutomationCommandLine: Display: 	SaveExtension.Serialization.Properties.int32
+[2020.09.26-14.45.10:931][  6]LogAutomationCommandLine: Display: 	SaveExtension.Serialization.Properties.int64
+[2020.09.26-14.45.10:942][  6]LogAutomationCommandLine: Display: 	SaveExtension.Serialization.Properties.int8
+[2020.09.26-14.45.10:954][  6]LogAutomationCommandLine: Display: 	SaveExtension.Serialization.Properties.uint16
+[2020.09.26-14.45.10:965][  6]LogAutomationCommandLine: Display: 	SaveExtension.Serialization.Properties.uint32
+[2020.09.26-14.45.10:977][  6]LogAutomationCommandLine: Display: 	SaveExtension.Serialization.Properties.uint64
+[2020.09.26-14.45.10:988][  6]LogAutomationCommandLine: Display: 	SaveExtension.Serialization.Properties.uint8
+[2020.09.26-14.45.11:000][  6]LogAutomationCommandLine: Display: 	SaveExtension.Serialization.Can save an actor synchronously
+[2020.09.26-14.45.11:011][  6]LogAutomationCommandLine: Display: 	SaveExtension.GameInstance can be saved
+[2020.09.26-14.45.11:023][  6]LogAutomationCommandLine: Display: 	SaveExtension.SaveManager is instanced
+[2020.09.26-14.45.11:035][  6]AutomationTestingLog: New page: -----Test Run 3----
+[2020.09.26-14.45.11:046][  6]AutomationTestingLog: -----Test Run 3----
+[2020.09.26-14.45.11:058][  6]LogAutomationController: Display: Test Started. Name={Can load files synchronously}
+[2020.09.26-14.45.11:117][ 12]LogAutomationController: Display: Test Completed. Result={Passed} Name={Can load files synchronously} Path={SaveExtension.Files.Can load files synchronously}
+[2020.09.26-14.45.11:122][ 12]LogAutomationController: BeginEvents: SaveExtension.Files.Can load files synchronously
+[2020.09.26-14.45.11:133][ 12]LogAutomationController: EndEvents: SaveExtension.Files.Can load files synchronously
+[2020.09.26-14.45.11:145][ 12]LogAutomationController: Display: Test Started. Name={Can save files asynchronously}
+[2020.09.26-14.45.11:224][ 21]LogAutomationController: Display: Test Completed. Result={Passed} Name={Can save files asynchronously} Path={SaveExtension.Files.Can save files asynchronously}
+[2020.09.26-14.45.11:230][ 21]LogAutomationController: BeginEvents: SaveExtension.Files.Can save files asynchronously
+[2020.09.26-14.45.11:241][ 21]LogAutomationController: EndEvents: SaveExtension.Files.Can save files asynchronously
+[2020.09.26-14.45.11:253][ 21]LogAutomationController: Display: Test Started. Name={Can save files synchronously}
+[2020.09.26-14.45.11:310][ 28]LogAutomationController: Display: Test Completed. Result={Passed} Name={Can save files synchronously} Path={SaveExtension.Files.Can save files synchronously}
+[2020.09.26-14.45.11:317][ 28]LogAutomationController: BeginEvents: SaveExtension.Files.Can save files synchronously
+[2020.09.26-14.45.11:329][ 28]LogAutomationController: EndEvents: SaveExtension.Files.Can save files synchronously
+[2020.09.26-14.45.11:341][ 28]LogAutomationController: Display: Test Started. Name={bool}
+[2020.09.26-14.45.11:445][ 35]LogAutomationController: Display: Test Completed. Result={Passed} Name={bool} Path={SaveExtension.Serialization.Properties.bool}
+[2020.09.26-14.45.11:456][ 35]LogAutomationController: BeginEvents: SaveExtension.Serialization.Properties.bool
+[2020.09.26-14.45.11:468][ 35]LogAutomationController: EndEvents: SaveExtension.Serialization.Properties.bool
+[2020.09.26-14.45.11:480][ 35]LogAutomationController: Display: Test Started. Name={int16}
+[2020.09.26-14.45.11:583][ 42]LogAutomationController: Display: Test Completed. Result={Passed} Name={int16} Path={SaveExtension.Serialization.Properties.int16}
+[2020.09.26-14.45.11:585][ 42]LogAutomationController: BeginEvents: SaveExtension.Serialization.Properties.int16
+[2020.09.26-14.45.11:596][ 42]LogAutomationController: EndEvents: SaveExtension.Serialization.Properties.int16
+[2020.09.26-14.45.11:608][ 42]LogAutomationController: Display: Test Started. Name={int32}
+[2020.09.26-14.45.11:712][ 49]LogAutomationController: Display: Test Completed. Result={Passed} Name={int32} Path={SaveExtension.Serialization.Properties.int32}
+[2020.09.26-14.45.11:715][ 49]LogAutomationController: BeginEvents: SaveExtension.Serialization.Properties.int32
+[2020.09.26-14.45.11:726][ 49]LogAutomationController: EndEvents: SaveExtension.Serialization.Properties.int32
+[2020.09.26-14.45.11:738][ 49]LogAutomationController: Display: Test Started. Name={int64}
+[2020.09.26-14.45.11:841][ 56]LogAutomationController: Display: Test Completed. Result={Passed} Name={int64} Path={SaveExtension.Serialization.Properties.int64}
+[2020.09.26-14.45.11:844][ 56]LogAutomationController: BeginEvents: SaveExtension.Serialization.Properties.int64
+[2020.09.26-14.45.11:855][ 56]LogAutomationController: EndEvents: SaveExtension.Serialization.Properties.int64
+[2020.09.26-14.45.11:867][ 56]LogAutomationController: Display: Test Started. Name={int8}
+[2020.09.26-14.45.11:973][ 63]LogAutomationController: Display: Test Completed. Result={Passed} Name={int8} Path={SaveExtension.Serialization.Properties.int8}
+[2020.09.26-14.45.11:984][ 63]LogAutomationController: BeginEvents: SaveExtension.Serialization.Properties.int8
+[2020.09.26-14.45.11:996][ 63]LogAutomationController: EndEvents: SaveExtension.Serialization.Properties.int8
+[2020.09.26-14.45.12:008][ 63]LogAutomationController: Display: Test Started. Name={uint16}
+[2020.09.26-14.45.12:112][ 70]LogAutomationController: Display: Test Completed. Result={Passed} Name={uint16} Path={SaveExtension.Serialization.Properties.uint16}
+[2020.09.26-14.45.12:123][ 70]LogAutomationController: BeginEvents: SaveExtension.Serialization.Properties.uint16
+[2020.09.26-14.45.12:135][ 70]LogAutomationController: EndEvents: SaveExtension.Serialization.Properties.uint16
+[2020.09.26-14.45.12:146][ 70]LogAutomationController: Display: Test Started. Name={uint32}
+[2020.09.26-14.45.12:251][ 76]LogAutomationController: Display: Test Completed. Result={Passed} Name={uint32} Path={SaveExtension.Serialization.Properties.uint32}
+[2020.09.26-14.45.12:254][ 76]LogAutomationController: BeginEvents: SaveExtension.Serialization.Properties.uint32
+[2020.09.26-14.45.12:265][ 76]LogAutomationController: EndEvents: SaveExtension.Serialization.Properties.uint32
+[2020.09.26-14.45.12:277][ 76]LogAutomationController: Display: Test Started. Name={uint64}
+[2020.09.26-14.45.12:381][ 83]LogAutomationController: Display: Test Completed. Result={Passed} Name={uint64} Path={SaveExtension.Serialization.Properties.uint64}
+[2020.09.26-14.45.12:383][ 83]LogAutomationController: BeginEvents: SaveExtension.Serialization.Properties.uint64
+[2020.09.26-14.45.12:395][ 83]LogAutomationController: EndEvents: SaveExtension.Serialization.Properties.uint64
+[2020.09.26-14.45.12:407][ 83]LogAutomationController: Display: Test Started. Name={uint8}
+[2020.09.26-14.45.12:511][ 90]LogAutomationController: Display: Test Completed. Result={Passed} Name={uint8} Path={SaveExtension.Serialization.Properties.uint8}
+[2020.09.26-14.45.12:513][ 90]LogAutomationController: BeginEvents: SaveExtension.Serialization.Properties.uint8
+[2020.09.26-14.45.12:524][ 90]LogAutomationController: EndEvents: SaveExtension.Serialization.Properties.uint8
+[2020.09.26-14.45.12:536][ 90]LogAutomationController: Display: Test Started. Name={Can save an actor synchronously}
+[2020.09.26-14.45.12:645][ 97]LogAutomationController: Display: Test Completed. Result={Failed} Name={Can save an actor synchronously} Path={SaveExtension.Serialization.Can save an actor synchronously}
+[2020.09.26-14.45.12:653][ 97]LogAutomationController: BeginEvents: SaveExtension.Serialization.Can save an actor synchronously
+[2020.09.26-14.45.12:524][ 90]LogAutomationController: Error: Blabla
+[2020.09.26-14.45.12:664][ 97]LogAutomationController: EndEvents: SaveExtension.Serialization.Can save an actor synchronously
+[2020.09.26-14.45.12:676][ 97]LogAutomationController: Display: Test Started. Name={GameInstance can be saved}
+[2020.09.26-14.45.14:507][100]LogWindows: Error: === Critical error: ===
+[2020.09.26-14.45.14:518][100]LogWindows: Error: 
+[2020.09.26-14.45.14:527][100]LogWindows: Error: Fatal error!
+[2020.09.26-14.45.14:539][100]LogWindows: Error: 
+[2020.09.26-14.45.14:551][100]LogWindows: Error: Unhandled Exception: EXCEPTION_ACCESS_VIOLATION writing address 0x000001a8
+[2020.09.26-14.45.14:562][100]LogWindows: Error: 
+[2020.09.26-14.45.14:573][100]LogWindows: Error: [Callstack] 0x00007ffc865dbbe6 UE4Editor-SaveExtensionTest.dll!<lambda_2c86a412dc398a25e19c850e36a77665>::operator()() [E:\Piperift\Runner\builds\GZGxWD42\0\piperift\ci-cd\save-extension\Build\SaveExtension_425\HostProject\Plugins\SaveExtension\Source\Test\Private\GameInstance.spec.cpp:48]
+[2020.09.26-14.45.14:585][100]LogWindows: Error: [Callstack] 0x00007ffc865e8384 UE4Editor-SaveExtensionTest.dll!Automatron::Commands::FSingleExecuteLatent::Update() [E:\Piperift\Runner\builds\GZGxWD42\0\piperift\ci-cd\save-extension\Build\SaveExtension_425\HostProject\Plugins\SaveExtension\Source\Test\Private\Automatron.h:774]
+[2020.09.26-14.45.14:596][100]LogWindows: Error: [Callstack] 0x00007ffc9efc5501 UE4Editor-Core.dll!FAutomationTestFramework::ExecuteLatentCommands() [D:\Build\++UE4+Licensee\Sync\Engine\Source\Runtime\Core\Private\Misc\AutomationTest.cpp:299]
+[2020.09.26-14.45.14:608][100]LogWindows: Error: [Callstack] 0x00007ffc8413efd4 UE4Editor-AutomationWorker.dll!FAutomationWorkerModule::Tick() [D:\Build\++UE4+Licensee\Sync\Engine\Source\Runtime\AutomationWorker\Private\AutomationWorkerModule.cpp:68]
+[2020.09.26-14.45.14:619][100]LogWindows: Error: [Callstack] 0x00007ff67bc796e6 UE4Editor-Cmd.exe!FEngineLoop::Tick() [D:\Build\++UE4+Licensee\Sync\Engine\Source\Runtime\Launch\Private\LaunchEngineLoop.cpp:5006]
+[2020.09.26-14.45.14:631][100]LogWindows: Error: [Callstack] 0x00007ff67bc8ba7c UE4Editor-Cmd.exe!GuardedMain() [D:\Build\++UE4+Licensee\Sync\Engine\Source\Runtime\Launch\Private\Launch.cpp:169]
+[2020.09.26-14.45.14:642][100]LogWindows: Error: [Callstack] 0x00007ff67bc8bb5a UE4Editor-Cmd.exe!GuardedMainWrapper() [D:\Build\++UE4+Licensee\Sync\Engine\Source\Runtime\Launch\Private\Windows\LaunchWindows.cpp:137]
+[2020.09.26-14.45.14:654][100]LogWindows: Error: [Callstack] 0x00007ff67bc9e31d UE4Editor-Cmd.exe!WinMain() [D:\Build\++UE4+Licensee\Sync\Engine\Source\Runtime\Launch\Private\Windows\LaunchWindows.cpp:268]
+[2020.09.26-14.45.14:665][100]LogWindows: Error: [Callstack] 0x00007ff67bca040a UE4Editor-Cmd.exe!__scrt_common_main_seh() [d:\agent\_work\5\s\src\vctools\crt\vcstartup\src\startup\exe_common.inl:288]
+[2020.09.26-14.45.14:677][100]LogWindows: Error: [Callstack] 0x00007ffd321b6fd4 KERNEL32.DLL!UnknownFunction []
+[2020.09.26-14.45.14:688][100]LogWindows: Error: [Callstack] 0x00007ffd32e3cec1 ntdll.dll!UnknownFunction []
+[2020.09.26-14.45.14:700][100]LogWindows: Error: 
+[2020.09.26-14.45.14:733][100]LogExit: Executing StaticShutdownAfterError
+[2020.09.26-14.45.14:746][100]LogWindows: FPlatformMisc::RequestExit(1)
+[2020.09.26-14.45.14:755][100]LogCore: Engine exit requested (reason: Win RequestExit)
