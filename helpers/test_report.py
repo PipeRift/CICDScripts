@@ -5,7 +5,7 @@ from datetime import datetime, timedelta
 from .util import install
 install('parse')
 
-from junit_xml import TestSuite, TestCase
+from helpers.junit_xml import TestSuite, TestCase
 from parse import *
 
 
@@ -63,20 +63,26 @@ def generate_junit_tests(root_folder):
             for test in folder['tests']:
                 status = test['result'];
 
+                output = '\n'.join(test['events'])
+
                 case = TestCase(
                     test['name'],
                     test['long_name'],
                     test['elapsed'].total_seconds(),
-                    ''.join(test['events']),
+                    None,
                     None,
                     None,
                     None,
                     status)
 
                 if status == 'Skip':
-                    case.add_skipped_info(" ")
+                    case.add_skipped_info(output)
                 elif status == 'Failed':
-                    case.add_failure_info(" ")
+                    if not output:
+                        output = ' '
+                    case.add_failure_info(output)
+                else:
+                    case.stdout = output
 
                 test_cases.append(case)
 
