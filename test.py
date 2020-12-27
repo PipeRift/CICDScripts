@@ -1,13 +1,12 @@
 import sys
 import os
-from os import path
 import shutil
 
-import helpers
+from helpers.util import *
 from helpers import env, ue4, test_report
 
-class TestsFailedError(Exception):
-    pass
+install('click')
+import click
 
 
 @click.group()
@@ -36,12 +35,12 @@ def plugin(plugin_name, path, test_path, engine_path):
     return result
 
 def create_host_project(plugin):
-    if path.exists(plugin.test_path):
+    if os.path.exists(plugin.test_path):
         shutil.rmtree(plugin.test_path, ignore_errors=True)
     os.makedirs(plugin.test_path)
 
     # Create .uproject file
-    file = open(path.join(plugin.test_path, 'HostProject.uproject'), 'w')
+    file = open(os.path.join(plugin.test_path, 'HostProject.uproject'), 'w')
     file.write('{ \
         "FileVersion": 3, \
         "Plugins": \
@@ -55,19 +54,10 @@ def create_host_project(plugin):
     file.close()
 
 	# Get the plugin directory in the host project, and copy all the files in
-    host_plugin_dir = path.join(plugin.test_path, "Plugins", plugin.name)
-
-    #Ignore Intermediates, Docs and Scripts folders
-    to_exclude = [path.join(plugin.build_path, "Intermediates")]
-    def IgnoredPaths(path, filenames):
-        ret = []
-        for filename in filenames:
-            if os.path.join(path, filename) in to_exclude:
-                ret.append(filename)
-        return ret
+    host_plugin_dir = os.path.join(plugin.test_path, "Plugins", plugin.name)
 
     # Copy plugin into host project
-    shutil.copytree(plugin.build_path, host_plugin_dir, ignore=IgnoredPaths)
+    shutil.copytree(plugin.build_path, host_plugin_dir, ignore=shutil.ignore_patterns('Intermediate'))
 
 test.add_command(plugin)
 

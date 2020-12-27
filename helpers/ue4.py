@@ -10,7 +10,6 @@ def setup_cli():
     if ue4cli_is_installed:
         return
 
-    print("Install ue4cli")
     install('ue4cli')
     from ue4cli import UnrealManagerFactory, UnrealManagerException
     manager = UnrealManagerFactory.create()

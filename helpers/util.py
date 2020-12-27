@@ -6,6 +6,7 @@ import shutil
 
 
 def install(packages):
+    print("Installing {}".format(packages))
     command = [sys.executable, "-m", "pip", "install"];
     command.append(packages)
     subprocess.call(command)

@@ -2,9 +2,11 @@ import sys
 import os
 import shutil
 
-import click
-from helpers import env
 from helpers.util import *
+from helpers import env
+
+install('click')
+import click
 
 
 @click.group()
@@ -30,7 +32,6 @@ def plugin(plugin_name, path, build_path, destination):
     temp_path = os.path.join(destination, plugin.name)
     temp_path_rel = os.path.join('.', plugin.name)
 
-    print("Install 7z for python")
     install('py7zr')
     import py7zr
 

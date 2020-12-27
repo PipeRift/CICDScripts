@@ -1,6 +1,10 @@
-import click
 import sys
+
+from helpers.util import *
 from helpers import ue4, env
+
+install('click')
+import click
 
 @click.group()
 def build():

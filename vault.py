@@ -1,14 +1,11 @@
-import sys
 import os
-import shutil
-import subprocess
 
-import click
-
-import helpers
-from helpers import env, ue4,
+from helpers import env
+from helpers.util import *
 from helpers.vault import Vault
 
+install('click')
+import click
 
 
 @click.group()
