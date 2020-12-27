@@ -31,4 +31,4 @@ def plugin(plugin_name, path, build_path, engine_path):
 build.add_command(plugin)
 
 if __name__ == '__main__':
-    sys.exit(build_plugin())
+    sys.exit(build())
