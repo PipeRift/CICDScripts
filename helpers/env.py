@@ -1,27 +1,72 @@
-from os import environ, path
+
+import os
+import pathlib
+import json
+
 
 # Normally, the branch of the commit
-commit_ref_name = environ.get('CI_COMMIT_REF_NAME')
+commit_ref_name = os.environ.get('CI_COMMIT_REF_NAME')
 if commit_ref_name is None:
     commit_ref_name = "no_branch"
 
+pipeline_url = os.environ.get('CI_PIPELINE_URL')
+vault_token = os.environ.get('vault_token')
 
 
-def init(args):
-    # Plugin
+class InvalidPluginError(Exception):
+    pass
+
+class Plugin(object):
+    name = None
+    uplugin = None
+    uplugin_file = None
+    path = None
+
+    test_path = None
+    build_path = None
+    vault_path = None
+    package_path = None
+
+    def __init__(self, name, path):
+        self.name = name
+        self.path = path
+        self.upluginFile = pathlib.Path(self.path, '{}.uplugin'.format(self.name))
+
+        if not os.path.isfile(self.upluginFile):
+            raise InvalidPluginError("Plugin '{}' not found.\n.uplugin file is missing ({}).".format(self.name, self.upluginFile))
+
+        with open(self.upluginFile) as json_file:
+            self.uplugin = json.load(json_file)
+
+        self.test_path = os.path.join(self.path, 'Test')
+        self.build_path = os.path.join(self.path, 'Build')
+        self.vault_path = os.path.join(self.path, 'Vault')
+
+    def get_version(self):
+        return self.uplugin['VersionName']
+
+    def get_engine_version(self):
+        return self.uplugin['EngineVersion']
+
+    def get_short_engine_version(self):
+        full = self.get_engine_version()
+        return '.'.join(full.split('.')[:2]) if full else None
+
+    def get_compact_engine_version(self):
+        full = self.get_engine_version()
+        return ''.join(full.split('.')[:2]) if full else None
+
+def init(_plugin, _path, _engine_version):
     global plugin
-    if len(args) > 0 and args[0] != None:
-        plugin = args[0]
-    else:
-        plugin = environ.get('plugin')
+    plugin = _plugin
+
+    global path
+    path = _path
+
+    global engine_version
+    engine_version = _engine_version
 
     # Versions
-    global engine_version
-    if len(args) > 1 and args[1] != None:
-        engine_version = args[1]
-    else:
-        engine_version = environ.get('engine_version')
-
     global dot_version, compact_version
     if engine_version != None:
         dot_version = "4." + engine_version
@@ -32,28 +77,44 @@ def init(args):
     # Engine
     global engine_path
     if dot_version is not None:
-        engine_path = path.join(environ.get('ProgramW6432'), "Epic Games", "UE_" + dot_version)
+        engine_path = os.path.join(os.environ.get('ProgramW6432'), "Epic Games", "UE_" + dot_version)
 
-    # Project
-    global project_path, build_path, test_path
-    if len(args) > 2 and args[2] != None:
-        project_path = args[2]
-    else:
-        project_path = environ.get('CI_PROJECT_DIR')
 
-    if project_path != None:
-        build_path = path.join(project_path, 'Build')
-        test_path = path.join(project_path, 'Test')
+    global build_path, test_path
+    if path != None:
+        build_path = os.path.join(path, 'Build')
+        test_path = os.path.join(path, 'Test')
     else:
         build_path = test_path = None
 
     # Pipeline
     global pipeline_url
-    pipeline_url = environ.get('CI_PIPELINE_URL')
+    pipeline_url = os.environ.get('CI_PIPELINE_URL')
     global vault_token
-    vault_token = environ.get('vault_token')
+    vault_token = os.environ.get('vault_token')
 
     if plugin is None or engine_version is None:
         print("Missing environment variables 'plugin' or 'engine_version'")
         return -1
     return 0
+
+def init(args): # args version of init
+    plugin = None
+    if len(args) > 0 and args[0] != None:
+        plugin = args[0]
+    else:
+        plugin = os.environ.get('plugin')
+
+    engine_version = None
+    if len(args) > 1 and args[1] != None:
+        engine_version = args[1]
+    else:
+        engine_version = os.environ.get('engine_version')
+
+    path = None
+    if len(args) > 2 and args[2] != None:
+        path = args[2]
+    else:
+        path = os.environ.get('CI_PROJECT_DIR')
+
+    init(plugin, path, engine_version)

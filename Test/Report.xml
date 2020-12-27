@@ -1,0 +1,32 @@
+<?xml version="1.0" ?>
+<testsuites disabled="0" errors="0" failures="1" tests="15" time="1.2409999999999999">
+	<testsuite disabled="0" errors="0" failures="0" name="SaveExtension.Files" skipped="0" tests="3" time="0.195">
+		<testcase name="Can load files synchronously" time="0.059000" classname="SaveExtension.Files.Can load files synchronously" status="Passed"/>
+		<testcase name="Can save files asynchronously" time="0.079000" classname="SaveExtension.Files.Can save files asynchronously" status="Passed"/>
+		<testcase name="Can save files synchronously" time="0.057000" classname="SaveExtension.Files.Can save files synchronously" status="Passed"/>
+	</testsuite>
+	<testsuite disabled="0" errors="0" failures="0" name="SaveExtension.Serialization.Properties" skipped="0" tests="9" time="0.9369999999999999">
+		<testcase name="bool" time="0.104000" classname="SaveExtension.Serialization.Properties.bool" status="Passed"/>
+		<testcase name="int16" time="0.103000" classname="SaveExtension.Serialization.Properties.int16" status="Passed"/>
+		<testcase name="int32" time="0.104000" classname="SaveExtension.Serialization.Properties.int32" status="Passed"/>
+		<testcase name="int64" time="0.103000" classname="SaveExtension.Serialization.Properties.int64" status="Passed"/>
+		<testcase name="int8" time="0.106000" classname="SaveExtension.Serialization.Properties.int8" status="Passed"/>
+		<testcase name="uint16" time="0.104000" classname="SaveExtension.Serialization.Properties.uint16" status="Passed"/>
+		<testcase name="uint32" time="0.105000" classname="SaveExtension.Serialization.Properties.uint32" status="Passed"/>
+		<testcase name="uint64" time="0.104000" classname="SaveExtension.Serialization.Properties.uint64" status="Passed"/>
+		<testcase name="uint8" time="0.104000" classname="SaveExtension.Serialization.Properties.uint8" status="Passed"/>
+	</testsuite>
+	<testsuite disabled="0" errors="0" failures="1" name="SaveExtension.Serialization" skipped="0" tests="1" time="0.109">
+		<testcase name="Can save an actor synchronously" time="0.109000" classname="SaveExtension.Serialization.Can save an actor synchronously" status="Failed">
+			<failure type="failure" message="Error: Blabla"/>
+		</testcase>
+	</testsuite>
+	<testsuite disabled="0" errors="0" failures="0" name="SaveExtension" skipped="2" tests="2" time="0">
+		<testcase name="GameInstance can be saved" classname="SaveExtension.GameInstance can be saved" status="Skip">
+			<skipped type="skipped"/>
+		</testcase>
+		<testcase name="SaveManager is instanced" classname="SaveExtension.SaveManager is instanced" status="Skip">
+			<skipped type="skipped"/>
+		</testcase>
+	</testsuite>
+</testsuites>

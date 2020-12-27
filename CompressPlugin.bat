@@ -12,7 +12,7 @@ if "!engine_version!" EQU "" (
     echo "No engine subversion(4.X) specified"
     exit 1
 )
-set dot_version=4.!engine_version!
+set short_version=4.!engine_version!
 set compact_version=4!engine_version!
 
 
@@ -20,29 +20,30 @@ set project_path=%CI_PROJECT_DIR%
 
 set lib_path=%~dp0
 set build_path=!project_path!\Build
+set temp_path=!project_path!\Temp
 
 
-IF NOT EXIST !build_path!\!plugin!_!compact_version! (
-    echo "\Build\!plugin!_!compact_version!" doesn't exist
+IF NOT EXIST !build_path! (
+    echo Folder "\Build" doesn't exist
     exit 1
 )
 
 echo.
 echo -- Cleanup Deployment Folder
-rmdir "!build_path!\!plugin!" /S /Q 2> nul
-mkdir "!build_path!\!plugin!" > nul
+rmdir "!temp_path!\!plugin!" /S /Q 2> nul
+mkdir "!temp_path!\!plugin!" > nul
 
 echo -- Remove old packaged Plugin
-del "!build_path!\!plugin!_!compact_version!.zip" 2> nul
-del "!build_path!\!plugin!_!compact_version!_Bin.zip" 2> nul
+del "!temp_path!\!plugin!_!compact_version!.zip" 2> nul
+del "!temp_path!\!plugin!_!compact_version!_Bin.zip" 2> nul
 
 echo -- Cleanup Online Documentation
-rmdir "!build_path!\!plugin!_!dot_version!\Docs" /S /Q > nul
+rmdir "!build_path!\Docs" /S /Q > nul
 
 echo.
-echo -- Copy !dot_version! Plugin
+echo -- Copy !short_version! Plugin
 echo     \!plugin!_!compact_version! into \!plugin!
-xcopy "!build_path!\!plugin!_!compact_version!" "!build_path!\!plugin!" /S /Q /Y > nul
+xcopy "!build_path!" "!build_path!\!plugin!" /S /Q /Y > nul
 if errorlevel 1  ( exit 1 )
 
 echo.

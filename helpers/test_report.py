@@ -91,11 +91,9 @@ def generate_junit_tests(root_folder):
 
     return suites
 
-
-def generateFromEnv(env):
-    log_file = path.join(env.test_path, "Saved", "Logs", "HostProject.log")
-    report_file = path.join(env.test_path, "Report.xml")
-
+def generate(plugin):
+    log_file = path.join(plugin.test_path, "Saved", "Logs", "HostProject.log")
+    report_file = path.join(plugin.test_path, "Report.xml")
     generate(log_file, report_file)
 
 def generate(log_file, report_file):
@@ -170,7 +168,6 @@ def generate(log_file, report_file):
 
     with open(report_file, "w") as dest_file:
         TestSuite.to_file(dest_file, suites, True)
-
 
 
 #test_cases = [TestCase('Test1', 'some.class.name', 123.345, 'I am stdout!', 'I am stderr!')]

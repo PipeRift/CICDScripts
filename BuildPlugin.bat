@@ -18,8 +18,6 @@ set compact_version=4!engine_version!
 
 set project_path=%CI_PROJECT_DIR%
 
-set engine_path=%programfiles%\Epic Games\UE_!dot_version!
-
 set lib_path=%~dp0
 set build_path=!project_path!\Build
 
@@ -29,7 +27,7 @@ echo.
 echo -- Building !Plugin! Plugin
 echo.
 
-call "!engine_path!\Engine\Build\BatchFiles\RunUAT.bat" BuildPlugin -Plugin="!project_path!\!plugin!.uplugin" -Package="!build_path!\!plugin!_!compact_version!" -Rocket
+call ue4 uat BuildPlugin -Plugin="!project_path!\!plugin!.uplugin" -Package="!build_path!\!plugin!_!compact_version!" -Rocket
 if errorlevel 1  ( exit 1 )
 
 echo.
