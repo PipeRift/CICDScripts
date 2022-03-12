@@ -27,9 +27,9 @@ class Plugin(object):
     vault_path = None
     package_path = None
 
-    def __init__(self, name, path):
+    def __init__(self, name, path, build_path = None, test_path = None):
         self.name = name
-        self.path = path
+        self.path = os.path.abspath(path)
         self.upluginFile = pathlib.Path(self.path, '{}.uplugin'.format(self.name))
 
         if not os.path.isfile(self.upluginFile):
@@ -38,9 +38,25 @@ class Plugin(object):
         with open(self.upluginFile) as json_file:
             self.uplugin = json.load(json_file)
 
-        self.test_path = os.path.join(self.path, 'Test')
         self.build_path = os.path.join(self.path, 'Build')
+        self.test_path = os.path.join(self.path, 'Test')
         self.vault_path = os.path.join(self.path, 'Vault')
+
+        if build_path:
+            if os.path.isabs(build_path):
+                self.build_path = build_path
+            else:
+                self.build_path = os.path.join(self.path, build_path)
+        if test_path:
+            if os.path.isabs(test_path):
+                self.test_path = test_path
+            else:
+                self.test_path = os.path.join(self.path, test_path)
+        if vault_path:
+            if os.path.isabs(vault_path):
+                self.vault_path = vault_path
+            else:
+                self.vault_path = os.path.join(self.path, vault_path)
 
     def get_version(self):
         return self.uplugin['VersionName']

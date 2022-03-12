@@ -19,9 +19,7 @@ def test():
 @click.option('-t', '--test-path', envvar="CI_PLUGIN_TEST_DIR", type=click.Path(exists=True), help="Destination used to hold the host project for testing (default: {path}/Test)")
 @click.option('-e', '--engine-path', envvar="CI_ENGINE_DIR", type=click.Path(exists=True), help="Path to the engine (default: auto-discovered)")
 def plugin(plugin_name, path, test_path, engine_path):
-    plugin = env.Plugin(plugin_name, path)
-    if test_path:
-        plugin.test_path = test_path
+    plugin = env.Plugin(plugin_name, path, test_path=test_path)
 
     ue4.set_engine_root(plugin.get_short_engine_version(), engine_path)
 
@@ -31,7 +29,7 @@ def plugin(plugin_name, path, test_path, engine_path):
     result = ue4.test_plugin(plugin)
     test_report.generate(plugin)
 
-    ue4.clear_engine_root()
+    ue4.clean_engine_root()
     return result
 
 def create_host_project(plugin):

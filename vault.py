@@ -16,13 +16,11 @@ def vaultCLI():
 @click.option('-n', '--plugin-name', envvar="CI_PLUGIN", required=True, help="Name of the plugin (without .uplugin)")
 @click.option('-p', '--path', envvar="CI_PROJECT_DIR", required=True, type=click.Path(exists=True), help="Path that contains all plugin files")
 @click.option('-v', '--vault-path', envvar="CI_PLUGIN_VAULT_DIR", type=click.Path(exists=True), help="Folder that will contain the vault (default: {path}/Vault)")
-@click.option('-f', '--files-path', envvar="CI_PLUGIN_COMPRESSION_DIR", type=click.Path(exists=True), help="Folder that will contain the vault (default: {path}/Temp)")
+@click.option('-f', '--files-path', envvar="CI_PLUGIN_COMPRESSION_DIR", type=click.Path(exists=True), help="Folder that will contain the vault (default: {path}/Package)")
 def upload(plugin_name, path, vault_path, files_path):
-    plugin = env.Plugin(plugin_name, path)
-    if vault_path:
-        plugin.vault_path = vault_path
+    plugin = env.Plugin(plugin_name, path, vault_path=vault_path)
     if not files_path:
-        files_path = os.path.join(plugin.path, "Temp")
+        files_path = os.path.join(plugin.path, "Package")
 
     print("\n-- Clone vault")
     vault = Vault(os.path.join(env.project_path, "Vault"), env.vault_token)

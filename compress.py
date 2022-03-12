@@ -17,17 +17,15 @@ def compress():
 @click.option('-n', '--plugin-name', envvar="CI_PLUGIN", required=True, help="Name of the plugin (without .uplugin)")
 @click.option('-p', '--path', envvar="CI_PROJECT_DIR", required=True, type=click.Path(exists=True), help="Path that contains all plugin files")
 @click.option('-b', '--build-path', envvar="CI_PLUGIN_BUILD_DIR", type=click.Path(exists=True), help="Destination of the packaged plugin (default: {path}/Build)")
-@click.option('-d', '--destination', envvar="CI_PLUGIN_COMPRESSION_DIR", type=click.Path(exists=True), help="Folder that will contain the vault (default: {path}/Temp)")
+@click.option('-d', '--destination', envvar="CI_PLUGIN_COMPRESSION_DIR", type=click.Path(exists=True), help="Folder that will contain the vault (default: {path}/Package)")
 def plugin(plugin_name, path, build_path, destination):
     if not os.path.isdir(path):
         click.echo("Path is not a folder or it doesn't exist ('{}')".format(path))
         return -1
 
-    plugin = env.Plugin(plugin_name, path)
-    if build_path:
-        plugin.build_path = build_path
+    plugin = env.Plugin(plugin_name, path, build_path)
     if not destination:
-        destination = os.path.join(plugin.path, "Temp")
+        destination = os.path.join(plugin.path, "Package")
 
     temp_path = os.path.join(destination, plugin.name)
     temp_path_rel = os.path.join('.', plugin.name)
@@ -71,7 +69,7 @@ def plugin(plugin_name, path, build_path, destination):
     with py7zr.SevenZipFile(file, 'w') as f:
         f.writeall(temp_path_rel, 'base')
 
-    print("Clean temp")
+    print("Clean temporaries")
     remove(temp_path)
 
     return 0

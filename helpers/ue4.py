@@ -45,7 +45,8 @@ def build_plugin(plugin):
     try:
         manager.runUAT(['BuildPlugin',
             '-Plugin={}'.format(plugin.upluginFile),
-            '-Package={}'.format(plugin.build_path)])
+            '-Package={}'.format(plugin.build_path),
+            '-VS2019'])
     except Exception as e:
         return 1
     return 0
