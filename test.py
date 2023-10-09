@@ -1,9 +1,10 @@
 import sys
 import os
 import shutil
+from Scripts.helpers import unreal
 
 from helpers.util import *
-from helpers import env, ue4, test_report
+from helpers import env, test_report
 
 install('click')
 import click
@@ -21,15 +22,15 @@ def test():
 def plugin(plugin_name, path, test_path, engine_path):
     plugin = env.Plugin(plugin_name, path, test_path=test_path)
 
-    ue4.set_engine_root(plugin.get_short_engine_version(), engine_path)
+    unreal.override_engine_path(plugin.get_short_engine_version(), engine_path)
 
     print("\n-- Create host project")
     create_host_project(plugin)
 
-    result = ue4.test_plugin(plugin)
+    result = unreal.test_plugin(plugin)
     test_report.generate(plugin)
 
-    ue4.clean_engine_root()
+    unreal.clean_engine_path()
     return result
 
 def create_host_project(plugin):

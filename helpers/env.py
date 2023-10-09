@@ -27,7 +27,7 @@ class Plugin(object):
     vault_path = None
     package_path = None
 
-    def __init__(self, name, path, build_path = None, test_path = None):
+    def __init__(self, name, path, build_path = None, test_path = None, vault_path = None):
         self.name = name
         self.path = os.path.abspath(path)
         self.upluginFile = pathlib.Path(self.path, '{}.uplugin'.format(self.name))

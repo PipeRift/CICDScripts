@@ -1,7 +1,6 @@
 import sys
-
 from helpers.util import *
-from helpers import ue4, env
+from helpers import env, unreal
 
 install('click')
 import click
@@ -18,12 +17,12 @@ def build():
 def plugin(plugin_name, path, build_path, engine_path):
     plugin = env.Plugin(plugin_name, path, build_path)
 
-    ue4.set_engine_root(plugin.get_short_engine_version(), engine_path)
+    unreal.override_engine_path(plugin.get_short_engine_version(), engine_path)
 
-    click.echo("-- Building {} Plugin".format(plugin.name))
-    result = ue4.build_plugin(plugin)
+    click.echo(f"{colors.WARNING}-- Building {plugin.name} Plugin{colors.ENDC}")
+    result = unreal.build_plugin(plugin)
 
-    ue4.clean_engine_root()
+    unreal.clean_engine_path()
     return result
 
 build.add_command(plugin)
