@@ -44,15 +44,24 @@ def clean_engine_path():
     overrided_engine_path = False
     engine_path = None
 
-def build_plugin(plugin):
+def build_plugin(plugin, all_platforms=False):
     try:
-        run_uat(['BuildPlugin',
+        if not all_platforms:
+            if platform == "linux" or platform == "linux2":
+                target_platform = "Linux"
+            if platform == "win32":
+                target_platform = "Win64"
+
+        args = ['BuildPlugin',
             '-Plugin={}'.format(plugin.upluginFile),
-            '-Package={}'.format(plugin.build_path)])
+            '-Package={}'.format(plugin.build_path)]
+        if target_platform:
+            args.append(f"-TargetPlatforms={target_platform}")
+        result = run_uat(args)
     except Exception as e:
         print("There was an error!\n{}".format(e or "."))
         return 1
-    return 0
+    return result
 
 def test_plugin(plugin):
     last_cwd = os.getcwd()
