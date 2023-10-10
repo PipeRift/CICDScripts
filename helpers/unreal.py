@@ -45,6 +45,7 @@ def clean_engine_path():
     engine_path = None
 
 def build_plugin(plugin, all_platforms=False):
+    result = 0
     try:
         if not all_platforms:
             if platform == "linux" or platform == "linux2":
