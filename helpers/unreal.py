@@ -1,3 +1,4 @@
+import sys
 import os
 import subprocess
 from .util import install
@@ -63,11 +64,10 @@ def build_plugin(plugin, all_platforms=False):
         if target_platform:
             args.append(f"-TargetPlatforms={target_platform}")
         run_uat(args)
-    except Exception:
-        print("-- Failed")
-        return 1
+    except subprocess.CalledProcessError as e:
+        print(f"-- Failed")
+        sys.exit(e.returncode)
     print("-- Succeeded")
-    return 0
 
 def test_plugin(plugin):
     last_cwd = os.getcwd()
