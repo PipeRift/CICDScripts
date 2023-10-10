@@ -4,18 +4,20 @@ from .util import install
 from sys import platform
 
 
+def run(command, cwd=None):
+    return subprocess.check_call(command, cwd=cwd, shell=True)
 
 def run_uat(args):
     global overrided_engine_path
     global engine_path
-    uat_path = os.path.join(engine_path, "Engine", "Build", "BatchFiles")
+    uat_path = os.path.join("Engine", "Build", "BatchFiles")
     uat = os.path.join(uat_path, "RunUAT.sh")
     if platform == "win32":
         uat = os.path.join(uat_path, "RunUAT.bat")
     command = [uat]
     command.extend(args)
     print("-- UAT: \"{}\"".format(" ".join(command)))
-    return subprocess.call(command, shell=True)
+    return run(command, get_engine_path())
 
 def set_default_engine_path(version):
     global overrided_engine_path
@@ -44,8 +46,10 @@ def clean_engine_path():
     overrided_engine_path = False
     engine_path = None
 
+def get_engine_path():
+    return engine_path
+
 def build_plugin(plugin, all_platforms=False):
-    result = 0
     try:
         if not all_platforms:
             if platform == "linux" or platform == "linux2":
@@ -58,11 +62,12 @@ def build_plugin(plugin, all_platforms=False):
             '-Package={}'.format(plugin.build_path)]
         if target_platform:
             args.append(f"-TargetPlatforms={target_platform}")
-        result = run_uat(args)
-    except Exception as e:
-        print("There was an error!\n{}".format(e or "."))
+        run_uat(args)
+    except Exception:
+        print("-- Failed")
         return 1
-    return result
+    print("-- Succeeded")
+    return 0
 
 def test_plugin(plugin):
     last_cwd = os.getcwd()
