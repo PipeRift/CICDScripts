@@ -6,7 +6,7 @@ from sys import platform
 
 
 def run(command, cwd=None):
-    return subprocess.check_call(command, cwd=cwd, shell=True)
+    return subprocess.check_call(command, cwd=cwd, shell=False)
 
 def run_uat(args):
     global overrided_engine_path
@@ -51,18 +51,17 @@ def get_engine_path():
     return engine_path
 
 def build_plugin(plugin, all_platforms=False):
+    if not all_platforms:
+        if platform == "linux" or platform == "linux2":
+            target_platform = "Linux"
+        if platform == "win32":
+            target_platform = "Win64"
+    args = ["BuildPlugin",
+        f"-Plugin={plugin.upluginFile}",
+        f"-Package={plugin.build_path}"]
+    if target_platform:
+        args.append(f"-TargetPlatforms={target_platform}")
     try:
-        if not all_platforms:
-            if platform == "linux" or platform == "linux2":
-                target_platform = "Linux"
-            if platform == "win32":
-                target_platform = "Win64"
-
-        args = ['BuildPlugin',
-            '-Plugin={}'.format(plugin.upluginFile),
-            '-Package={}'.format(plugin.build_path)]
-        if target_platform:
-            args.append(f"-TargetPlatforms={target_platform}")
         run_uat(args)
     except subprocess.CalledProcessError as e:
         print(f"-- Failed")

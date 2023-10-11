@@ -13,7 +13,6 @@ def build():
 @click.option('-p', '--path', envvar="CI_PROJECT_DIR", required=True, type=click.Path(exists=True), help="Path that contains all plugin files")
 @click.option('-b', '--build-path', envvar="CI_PLUGIN_BUILD_DIR", type=click.Path(exists=True), help="Destination of the packaged plugin (default: {path}/Build)")
 @click.option('-e', '--engine-path', envvar="CI_ENGINE_DIR", type=click.Path(exists=True), help="Path to the engine (default: auto-discovered)")
-
 def plugin(plugin_name, path, build_path, engine_path):
     plugin = env.Plugin(plugin_name, path, build_path)
     unreal.override_engine_path(plugin.get_short_engine_version(), engine_path)
