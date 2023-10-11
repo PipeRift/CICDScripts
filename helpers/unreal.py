@@ -5,8 +5,8 @@ from .util import install
 from sys import platform
 
 
-def run(command, cwd=None):
-    return subprocess.check_call(command, cwd=cwd, shell=False)
+def run(command, cwd=None, shell=False):
+    return subprocess.check_call(command, cwd=cwd, shell=shell)
 
 def run_uat(args):
     global overrided_engine_path
@@ -61,8 +61,9 @@ def build_plugin(plugin, all_platforms=False):
         f"-Package={plugin.build_path}"]
     if target_platform:
         args.append(f"-TargetPlatforms={target_platform}")
+
     try:
-        run_uat(args)
+        run_uat(args, shell=platform == "win32")
     except subprocess.CalledProcessError as e:
         print(f"-- Failed")
         sys.exit(e.returncode)
