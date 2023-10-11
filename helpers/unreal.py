@@ -18,7 +18,7 @@ def run_uat(args):
     command = [uat]
     command.extend(args)
     print("-- UAT: \"{}\"".format(" ".join(command)))
-    return run(command, get_engine_path())
+    return run(command, get_engine_path(), shell=platform == "win32")
 
 def set_default_engine_path(version):
     global overrided_engine_path
@@ -63,7 +63,7 @@ def build_plugin(plugin, all_platforms=False):
         args.append(f"-TargetPlatforms={target_platform}")
 
     try:
-        run_uat(args, shell=platform == "win32")
+        run_uat(args)
     except subprocess.CalledProcessError as e:
         print(f"-- Failed")
         sys.exit(e.returncode)
