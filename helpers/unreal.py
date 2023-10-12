@@ -58,7 +58,7 @@ def build_plugin(plugin, all_platforms=False):
             target_platform = "Win64"
     args = ["BuildPlugin",
         f"-Plugin={plugin.upluginFile}",
-        f"-Package={plugin.build_path}"]
+        f"-Package={plugin.build_path}", "-Rocket"]
     if target_platform:
         args.append(f"-TargetPlatforms={target_platform}")
 
