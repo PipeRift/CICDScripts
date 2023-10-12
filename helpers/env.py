@@ -13,6 +13,67 @@ pipeline_url = os.environ.get('CI_PIPELINE_URL')
 vault_token = os.environ.get('vault_token')
 
 
+
+class InvalidProjectError(Exception):
+    pass
+
+class Project(object):
+    name = None
+    uproject = None
+    uproject_file = None
+    path = None
+
+    test_path = None
+    build_path = None
+    vault_path = None
+    package_path = None
+
+    def __init__(self, name, path, build_path = None, test_path = None, vault_path = None):
+        self.name = name
+        self.path = os.path.abspath(path)
+        self.uprojectFile = pathlib.Path(self.path, '{}.uproject'.format(self.name))
+
+        if not os.path.isfile(self.uprojectFile):
+            raise InvalidProjectError("Project '{}' not found.\n.uproject file is missing ({}).".format(self.name, self.uprojectFile))
+
+        with open(self.uprojectFile) as json_file:
+            self.uproject = json.load(json_file)
+
+        self.build_path = os.path.join(self.path, 'Build')
+        self.test_path = os.path.join(self.path, 'Test')
+        self.vault_path = os.path.join(self.path, 'Vault')
+
+        if build_path:
+            if os.path.isabs(build_path):
+                self.build_path = build_path
+            else:
+                self.build_path = os.path.join(self.path, build_path)
+        if test_path:
+            if os.path.isabs(test_path):
+                self.test_path = test_path
+            else:
+                self.test_path = os.path.join(self.path, test_path)
+        if vault_path:
+            if os.path.isabs(vault_path):
+                self.vault_path = vault_path
+            else:
+                self.vault_path = os.path.join(self.path, vault_path)
+
+    def get_version(self):
+        return self.uproject['VersionName']
+
+    def get_engine_version(self):
+        return self.uproject['EngineAssociation']
+
+    def get_short_engine_version(self):
+        full = self.get_engine_version()
+        return '.'.join(full.split('.')[:2]) if full else None
+
+    def get_compact_engine_version(self):
+        full = self.get_engine_version()
+        return ''.join(full.split('.')[:2]) if full else None
+
+
 class InvalidPluginError(Exception):
     pass
 

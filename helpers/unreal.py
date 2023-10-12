@@ -50,17 +50,39 @@ def clean_engine_path():
 def get_engine_path():
     return engine_path
 
-def build_plugin(plugin, all_platforms=False):
+def build_project(project, config="Shipping", all_platforms=False):
+    args = ["BuildCookRun",
+        f"-project={project.uprojectFile}",
+        f"-package={project.build_path}",
+        f"-clientconfig={config}"]
     if not all_platforms:
         if platform == "linux" or platform == "linux2":
             target_platform = "Linux"
-        if platform == "win32":
+        elif platform == "win32":
             target_platform = "Win64"
+
+        if target_platform:
+            args.append(f"-targetplatforms={target_platform}")
+
+    try:
+        run_uat(args)
+    except subprocess.CalledProcessError as e:
+        print(f"-- Failed")
+        sys.exit(e.returncode)
+    print("-- Succeeded")
+
+def build_plugin(plugin, all_platforms=False):
     args = ["BuildPlugin",
-        f"-Plugin={plugin.upluginFile}",
-        f"-Package={plugin.build_path}", "-Rocket"]
-    if target_platform:
-        args.append(f"-TargetPlatforms={target_platform}")
+        f"-plugin={plugin.upluginFile}",
+        f"-package={plugin.build_path}", "-rocket"]
+    if not all_platforms:
+        if platform == "linux" or platform == "linux2":
+            target_platform = "Linux"
+        elif platform == "win32":
+            target_platform = "Win64"
+
+        if target_platform:
+            args.append(f"-targetplatforms={target_platform}")
 
     try:
         run_uat(args)

@@ -3,12 +3,17 @@ import subprocess
 import sys
 import os
 import shutil
+import importlib.util
 
 
-def install(packages):
-    print("Installing {}".format(packages))
+def install(package):
+    if package in sys.modules:
+        return
+    elif importlib.util.find_spec(package) is not None:
+        return
+    print("Installing {}".format(package))
     command = [sys.executable, "-m", "pip", "install"];
-    command.append(packages)
+    command.append(package)
     subprocess.call(command)
 
 def create_or_empty(path):
