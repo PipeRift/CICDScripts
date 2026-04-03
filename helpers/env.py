@@ -13,9 +13,9 @@ pipeline_url = os.environ.get('CI_PIPELINE_URL')
 vault_token = os.environ.get('vault_token')
 
 
-
 class InvalidProjectError(Exception):
     pass
+
 
 class Project(object):
     name = None
@@ -28,13 +28,15 @@ class Project(object):
     vault_path = None
     package_path = None
 
-    def __init__(self, name, path, build_path = None, test_path = None, vault_path = None):
+    def __init__(self, name, path, build_path=None, test_path=None, vault_path=None):
         self.name = name
         self.path = os.path.abspath(path)
-        self.uprojectFile = pathlib.Path(self.path, '{}.uproject'.format(self.name))
+        self.uprojectFile = pathlib.Path(
+            self.path, '{}.uproject'.format(self.name))
 
         if not os.path.isfile(self.uprojectFile):
-            raise InvalidProjectError("Project '{}' not found.\n.uproject file is missing ({}).".format(self.name, self.uprojectFile))
+            raise InvalidProjectError("Project '{}' not found.\n.uproject file is missing ({}).".format(
+                self.name, self.uprojectFile))
 
         with open(self.uprojectFile) as json_file:
             self.uproject = json.load(json_file)
@@ -77,6 +79,7 @@ class Project(object):
 class InvalidPluginError(Exception):
     pass
 
+
 class Plugin(object):
     name = None
     uplugin = None
@@ -88,13 +91,15 @@ class Plugin(object):
     vault_path = None
     package_path = None
 
-    def __init__(self, name, path, build_path = None, test_path = None, vault_path = None):
+    def __init__(self, name, path, build_path=None, test_path=None, vault_path=None):
         self.name = name
         self.path = os.path.abspath(path)
-        self.upluginFile = pathlib.Path(self.path, '{}.uplugin'.format(self.name))
+        self.upluginFile = pathlib.Path(
+            self.path, '{}.uplugin'.format(self.name))
 
         if not os.path.isfile(self.upluginFile):
-            raise InvalidPluginError("Plugin '{}' not found.\n.uplugin file is missing ({}).".format(self.name, self.upluginFile))
+            raise InvalidPluginError("Plugin '{}' not found.\n.uplugin file is missing ({}).".format(
+                self.name, self.upluginFile))
 
         with open(self.upluginFile) as json_file:
             self.uplugin = json.load(json_file)
@@ -133,6 +138,7 @@ class Plugin(object):
         full = self.get_engine_version()
         return ''.join(full.split('.')[:2]) if full else None
 
+
 def init(_plugin, _path, _engine_version):
     global plugin
     plugin = _plugin
@@ -154,8 +160,8 @@ def init(_plugin, _path, _engine_version):
     # Engine
     global engine_path
     if dot_version is not None:
-        engine_path = os.path.join(os.environ.get('ProgramW6432'), "Epic Games", "UE_" + dot_version)
-
+        engine_path = os.path.join(os.environ.get(
+            'ProgramW6432'), "Epic Games", "UE_" + dot_version)
 
     global build_path, test_path
     if path != None:
@@ -175,7 +181,8 @@ def init(_plugin, _path, _engine_version):
         return -1
     return 0
 
-def init(args): # args version of init
+
+def init(args):  # args version of init
     plugin = None
     if len(args) > 0 and args[0] != None:
         plugin = args[0]

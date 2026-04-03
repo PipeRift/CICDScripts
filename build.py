@@ -1,12 +1,14 @@
+import click
 from helpers.util import *
 from helpers import env, unreal
 
 install('click')
-import click
+
 
 @click.group()
 def build():
     pass
+
 
 @click.command()
 @click.option('-n', '--project-name', envvar="CI_PROJECT_NAME", required=True, help="Name of the project (without .uproject)")
@@ -21,10 +23,15 @@ def project(project_name, path, build_path, engine_path, config, all_platforms):
         config = "Shipping"
 
     project = env.Project(project_name, path, build_path)
-    unreal.override_engine_path(project.get_short_engine_version(), engine_path)
-    click.echo(f"{colors.WARNING}-- Building {project.name} Project{colors.ENDC} for {config}")
+    unreal.override_engine_path(
+        project.get_short_engine_version(), engine_path)
+    click.echo(
+        f"-- Building project {colors.OKGREEN}{project.name}{colors.ENDC} for {colors.OKGREEN}{config}{colors.ENDC} ()")
     unreal.build_project(project, config, all_platforms)
+
+
 build.add_command(project)
+
 
 @click.command()
 @click.option('-n', '--plugin-name', envvar="CI_PLUGIN_NAME", required=True, help="Name of the plugin (without .uplugin)")
@@ -36,8 +43,11 @@ def plugin(plugin_name, path, build_path, engine_path, all_platforms):
     """Packages a plugin for the desired platform. """
     plugin = env.Plugin(plugin_name, path, build_path)
     unreal.override_engine_path(plugin.get_short_engine_version(), engine_path)
-    click.echo(f"{colors.WARNING}-- Building {plugin.name} Plugin{colors.ENDC}")
+    click.echo(
+        f"{colors.WARNING}-- Building {plugin.name} Plugin{colors.ENDC}")
     unreal.build_plugin(plugin, all_platforms)
+
+
 build.add_command(plugin)
 
 if __name__ == '__main__':
