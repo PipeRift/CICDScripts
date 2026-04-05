@@ -3,11 +3,11 @@ import os
 import json
 import subprocess
 import shutil
-from sys import platform
-from . import env, test_report
+from platform import system
+from . import env, test_report, util
 
 
-def run(command, cwd=None, shell=platform == "win32"):
+def run(command, cwd=None, shell=system() == "Windows"):
     return subprocess.check_call(command, cwd=cwd, shell=shell)
 
 
@@ -104,10 +104,10 @@ class UAT(object):
         else:
             self.is_default_engine_path = True
             print(f"-- Finding engine path for version {version}")
-            if platform == "linux" or platform == "linux2":
-                self.engine_path = get_default_engine_path_linux(version)
-            elif platform == "win32":
+            if system() == "Windows":
                 self.engine_path = get_default_engine_path_win(version)
+            elif system() == "Linux":
+                self.engine_path = get_default_engine_path_linux(version)
         print(f"   {self.engine_path}")
 
         if not os.path.isdir(self.engine_path):
@@ -116,7 +116,7 @@ class UAT(object):
 
         scripts_path = os.path.join(
             self.engine_path, "Engine", "Build", "BatchFiles")
-        if platform == "win32":
+        if system() == "Windows":
             self.uat_file = os.path.join(scripts_path, "RunUAT.bat")
         else:
             self.uat_file = os.path.join(scripts_path, "RunUAT.sh")
@@ -131,7 +131,7 @@ class UAT(object):
         print("   UAT: \"{}\"".format(" ".join(args)))
         return run(command, self.engine_path)
 
-    def build_project(self, project: env.Project, config, all_platforms=False):
+    def build_project(self, project: env.Project, config, platform):
         args = ["BuildCookRun",
                 f"-project={project.uproject_file}",
                 "-build",
@@ -150,24 +150,13 @@ class UAT(object):
                 "-prereqs",
                 "-zenstore",
                 "-utf8output"]
-        target_platforms = []
-        if not all_platforms:
-            if platform == "linux" or platform == "linux2":
-                target_platforms.extend(["Linux", "LinuxArm64"])
-            elif platform == "win32":
-                target_platforms.extend(["Win64", "WinArm64"])
-        else:
-            if platform == "linux" or platform == "linux2":
-                target_platforms.extend(["Linux", "LinuxArm64"])
-            elif platform == "win32":  # Windows can cross-compile to linux
-                target_platforms.extend(
-                    ["Win64", "WinArm64", "Linux", "LinuxArm64"])
-        # TODO: For windows: -clientarchitecture = x64  arm64
-        if target_platforms:
-            print(target_platforms)
 
-            platform_list = '+'.join(target_platforms)
-            args.append(f"-targetplatforms={platform_list}")
+        ubt_platform = util.to_ubt_platform(platform)
+        if ubt_platform:
+            args.append(f"-Platform={ubt_platform}")
+        ubt_arch = util.to_ubt_architecture(platform)
+        if ubt_arch:
+            args.append(f"-SpecifiedArchitecture={ubt_arch}")
 
         try:
             self.run(args)
@@ -179,7 +168,13 @@ class UAT(object):
     def build_plugin(self, plugin: env.Plugin, all_platforms=False):
         args = ["BuildPlugin",
                 f"-plugin={plugin.uplugin_file}",
-                f"-package={plugin.build_path}", "-rocket"]
+                f"-package={plugin.build_path}", "-rocket",
+                "-Architecture_Windows=arm64+x64",
+                # "-Architecture_Linux=arm64+x64", Linux is considered two different platforms: Linux and LinuxARM64 (why epic?)
+                "-Architecture_Mac=arm64+x64",
+                "-Architecture_Android=arm64+x64",
+                "-Architecture_IOS=arm64",
+                "-StrictIncludes"]
         if not all_platforms:
             if platform == "linux" or platform == "linux2":
                 target_platform = "Linux"
