@@ -2,25 +2,13 @@ import sys
 import os
 import json
 import subprocess
-from .util import install
+import shutil
 from sys import platform
+from . import env, test_report
 
 
-def run(command, cwd=None, shell=False):
+def run(command, cwd=None, shell=platform == "win32"):
     return subprocess.check_call(command, cwd=cwd, shell=shell)
-
-
-def run_uat(args):
-    global overrided_engine_path
-    global engine_path
-    uat_path = os.path.join("Engine", "Build", "BatchFiles")
-    uat = os.path.join(uat_path, "RunUAT.sh")
-    if platform == "win32":
-        uat = os.path.join(uat_path, "RunUAT.bat")
-    command = [uat]
-    command.extend(args)
-    print("   UAT: \"{}\"".format(" ".join(args)))
-    return run(command, get_engine_path(), shell=platform == "win32")
 
 
 def get_default_engine_path_win(version):
@@ -61,111 +49,235 @@ def get_default_engine_path_linux(version):
         return image_engine_path
 
 
-def set_default_engine_path(version):
-    global overrided_engine_path
-    global engine_path
+def create_plugin_dummy_project(plugin, test_path):
+    if os.path.isfile(test_path):
+        raise AutomationError(f"Test path '{test_path}' is a file.")
+    elif not os.path.isdir(test_path):
+        os.makedirs(test_path)
+    elif os.listdir(test_path):  # not empty?
+        raise AutomationError(f"Test path '{test_path}' is not empty.")
 
-    print(f"-- Finding engine path for version {version}")
-    if platform == "linux" or platform == "linux2":
-        engine_path = get_default_engine_path_linux(version)
-    elif platform == "win32":
-        engine_path = get_default_engine_path_win(version)
-    overrided_engine_path = False
-    print(f"   {engine_path}")
-    return engine_path != None
+    # Create dummy .uproject file
+    uproject_file = os.path.join(test_path, f"{plugin.name}.uproject")
+    file = open(uproject_file, 'w')
+    file.write('{ \
+        "FileVersion": 3, \
+        "Plugins": \
+        [ \
+            { \
+                "Name": "' + plugin.name + '", \
+                "Enabled": true \
+            } \
+        ] \
+    }')
+    file.close()
+
+    # Get the plugin directory in the host project, and copy all the files in
+    host_plugin_dir = os.path.join(test_path, "Plugins", plugin.name)
+
+    # Copy plugin into host project
+    shutil.copytree(plugin.build_path, host_plugin_dir,
+                    ignore=shutil.ignore_patterns('Intermediate'))
+
+    return uproject_file
 
 
-def override_engine_path(version, override_path=None):
-    global overrided_engine_path
-    global engine_path
-    overrided_engine_path = False
-    if override_path:
-        print(f"-- Using custom engine path for version {version}")
-        engine_path = override_path
-        overrided_engine_path = True
-        print(f"   {engine_path}")
-        return engine_path != None
-    else:
-        return set_default_engine_path(version)
+class InvalidUATError(Exception):
+    pass
 
 
-def clean_engine_path():
-    global overrided_engine_path
-    global engine_path
-    overrided_engine_path = False
+class AutomationError(Exception):
+    pass
+
+
+class UAT(object):
+    version = None
+    is_default_engine_path = False
     engine_path = None
+    uat_file = None
 
+    def __init__(self, version=None, engine_path=None):
+        self.version = version
+        if engine_path:
+            print(f"-- Using custom engine path for version {version}")
+            self.engine_path = engine_path
+        else:
+            self.is_default_engine_path = True
+            print(f"-- Finding engine path for version {version}")
+            if platform == "linux" or platform == "linux2":
+                self.engine_path = get_default_engine_path_linux(version)
+            elif platform == "win32":
+                self.engine_path = get_default_engine_path_win(version)
+        print(f"   {self.engine_path}")
 
-def get_engine_path():
-    return engine_path
+        if not os.path.isdir(self.engine_path):
+            raise InvalidUATError(
+                f"Engine path '{self.engine_path}' not found.")
 
+        scripts_path = os.path.join(
+            self.engine_path, "Engine", "Build", "BatchFiles")
+        if platform == "win32":
+            self.uat_file = os.path.join(scripts_path, "RunUAT.bat")
+        else:
+            self.uat_file = os.path.join(scripts_path, "RunUAT.sh")
 
-def build_project(project, config="Shipping", all_platforms=False):
-    args = ["BuildCookRun",
-            f"-project={project.uprojectFile}",
-            f"-archivedirectory={project.build_path}",
-            f"-clientconfig={config}",
-            "-cook",
-            "-build",
-            "-stage",
-            "-pak",
-            "-archive"]
-    target_platforms = []
-    if not all_platforms:
-        if platform == "linux" or platform == "linux2":
-            target_platforms.extend(["Linux", "LinuxArm64"])
-        elif platform == "win32":
-            target_platforms.extend(["Win64", "WinArm64"])
-    else:
-        if platform == "linux" or platform == "linux2":
-            target_platforms.extend(["Linux", "LinuxArm64"])
-        elif platform == "win32":  # Windows can cross-compile to linux
-            target_platforms.extend(
-                ["Win64", "WinArm64", "Linux", "LinuxArm64"])
+        if not os.path.isfile(self.uat_file):
+            raise InvalidUATError(
+                f"UAT not found at '{self.uat_file}'.")
 
-    if target_platforms:
-        print(target_platforms)
+    def run(self, args):  # Run UAT command
+        command = [self.uat_file]
+        command.extend(args)
+        print("   UAT: \"{}\"".format(" ".join(args)))
+        return run(command, self.engine_path)
 
-        platform_list = '+'.join(target_platforms)
-        args.append(f"-targetplatforms={platform_list}")
+    def build_project(self, project: env.Project, config, all_platforms=False):
+        args = ["BuildCookRun",
+                f"-project={project.uproject_file}",
+                "-build",
+                "-compile",
+                "-nocompileeditor",
+                # f"-target={project.name}Game",
+                f"-clientconfig={config}",
+                f"-serverconfig={config}",
+                "-cook",
+                "-stage",
+                "-package",
+                "-pak",
+                "-compressed",
+                "-archive",
+                f"-archivedirectory={project.build_path}",
+                "-prereqs",
+                "-zenstore",
+                "-utf8output"]
+        target_platforms = []
+        if not all_platforms:
+            if platform == "linux" or platform == "linux2":
+                target_platforms.extend(["Linux", "LinuxArm64"])
+            elif platform == "win32":
+                target_platforms.extend(["Win64", "WinArm64"])
+        else:
+            if platform == "linux" or platform == "linux2":
+                target_platforms.extend(["Linux", "LinuxArm64"])
+            elif platform == "win32":  # Windows can cross-compile to linux
+                target_platforms.extend(
+                    ["Win64", "WinArm64", "Linux", "LinuxArm64"])
+        # TODO: For windows: -clientarchitecture = x64  arm64
+        if target_platforms:
+            print(target_platforms)
 
-    try:
-        run_uat(args)
-    except subprocess.CalledProcessError as e:
-        print(f"-- Failed")
-        sys.exit(e.returncode)
-    print("-- Succeeded")
+            platform_list = '+'.join(target_platforms)
+            args.append(f"-targetplatforms={platform_list}")
 
+        try:
+            self.run(args)
+        except subprocess.CalledProcessError as e:
+            print(f"-- Failed")
+            sys.exit(e.returncode)
+        print("-- Succeeded")
 
-def build_plugin(plugin, all_platforms=False):
-    args = ["BuildPlugin",
-            f"-plugin={plugin.upluginFile}",
-            f"-package={plugin.build_path}", "-rocket"]
-    if not all_platforms:
-        if platform == "linux" or platform == "linux2":
-            target_platform = "Linux"
-        elif platform == "win32":
-            target_platform = "Win64"
+    def build_plugin(self, plugin: env.Plugin, all_platforms=False):
+        args = ["BuildPlugin",
+                f"-plugin={plugin.uplugin_file}",
+                f"-package={plugin.build_path}", "-rocket"]
+        if not all_platforms:
+            if platform == "linux" or platform == "linux2":
+                target_platform = "Linux"
+            elif platform == "win32":
+                target_platform = "Win64"
 
-        if target_platform:
-            args.append(f"-targetplatforms={target_platform}")
+            if target_platform:
+                args.append(f"-targetplatforms={target_platform}")
 
-    try:
-        run_uat(args)
-    except subprocess.CalledProcessError as e:
-        print(f"-- Failed")
-        sys.exit(e.returncode)
-    print("-- Succeeded")
+        try:
+            self.run(args)
+        except subprocess.CalledProcessError as e:
+            print(f"-- Failed")
+            sys.exit(e.returncode)
+        print("-- Succeeded")
 
+    def run_automation(self, project, commands, editor=False, config=None, headless=True):
+        args = ["RunUnreal",
+                "-nop4",
+                "-unatended",
+                "-nopause",
+                "-nosplash",
+                f"-project={project.uproject_file}",
+                f"-args=-log -abslog={project.get_logs_path()}/{project.name}.log"]
+        if headless:
+            args.append("-nullrhi")
 
-def test_plugin(plugin):
-    last_cwd = os.getcwd()
-    os.chdir(plugin.test_path)
+        if editor:
+            args.extend(["-build=editor"])
+        else:
+            args.extend([
+                "-packaged",
+                f"-build={project.build_path if project.build_path else 'local'}"])
 
-    print("-- Run tests")
-    # We cant use the manager directly because it manually exits
-    result = subprocess.call(["ue4", "test", plugin.name], shell=True)
+        if config:
+            args.append(f"-configuration={config}")
 
-    print("-- Succeeded" if result == 0 else "-- Failed")
-    os.chdir(last_cwd)
-    return result
+        args.append(f"-ExecCmds=automation {';'.join(commands)};quit")
+
+        try:
+            self.run(args)
+        except subprocess.CalledProcessError as e:
+            print("-- Failed")
+            sys.exit(e.returncode)
+        print("-- Succeeded")
+
+    def run_plugin_tests(self, plugin: env.Plugin, test_path, all: bool, filters, tests, headless=True):
+        print("\n-- Create test dummy project")
+        uproject_file = create_plugin_dummy_project(plugin, test_path)
+        project = env.Project(plugin.name, test_path)
+        try:
+            self.run_project_tests(project, all, filters,
+                                   tests, True, None, headless)
+
+            # Copy report back into plugin
+            report_path = os.path.join(plugin.path, "Report.xml")
+            project_report_path = os.path.join(project.path, "Report.xml")
+            if os.path.isfile(report_path):
+                os.remove(report_path)
+            if os.path.isfile(project_report_path):
+                shutil.copy(project_report_path, report_path)
+        finally:
+            shutil.rmtree(test_path, ignore_errors=True)
+
+    def run_project_tests(self, project: env.Project, all: bool, filters, tests, editor: bool = False, config=None, headless=True):
+        commands = []
+        if all:
+            print("   All Tests")
+            commands.append('RunAll')
+        if len(filters) > 0:
+            print(f"   Filters: {' '.join(filters)}")
+            for filter in filters:
+                commands.append("RunFilter {filter}")
+        # Enqueue a 'RunTests' command for any individual test names that were specified
+        if len(tests) > 0:
+            print(f"   Tests: {' '.join(tests)}")
+            commands.append(f"RunTests Now {'+'.join(tests)}")
+
+        if not commands:  # By default we run Product tests
+            print("   No tests or filters to run, defaulting to Product tests.")
+            print("   Filters: Product")
+            commands.append("RunFilter Product")
+
+        try:
+            self.run_automation(project, commands,
+                                editor, config, headless)
+        finally:
+            test_report.generate_project(project)
+
+    def list_plugin_tests(self, plugin: env.Plugin, test_path):
+        print("\n-- Create test dummy project")
+        uproject_file = create_plugin_dummy_project(plugin, test_path)
+        project = env.Project(plugin.name, test_path)
+        try:
+            self.list_project_tests(project, True, None)
+        finally:
+            shutil.rmtree(test_path, ignore_errors=True)
+
+    def list_project_tests(self, project: env.Project, editor=False, config=None):
+        self.run_automation(project, ["List"],
+                            editor, config, True)
