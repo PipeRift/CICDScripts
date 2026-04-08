@@ -176,9 +176,9 @@ class UAT(object):
                 "-Architecture_IOS=arm64",
                 "-StrictIncludes"]
         if not all_platforms:
-            if platform == "linux" or platform == "linux2":
+            if system() == "Linux":
                 target_platform = "Linux"
-            elif platform == "win32":
+            elif system() == "Windows":
                 target_platform = "Win64"
 
             if target_platform:
