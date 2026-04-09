@@ -93,7 +93,17 @@ class Plugin(object):
 
     def __init__(self, name, path, build_path=None, vault_path=None):
         self.name = name
-        self.path = os.path.abspath(path) if path else os.getcwd()
+        if path:
+            self.path = os.path.abspath(path)
+        else:
+            # Is there a uproject in the folder?
+            for filename in os.listdir(path):
+                if filename.endswith('.uproject'):
+                    self.path = os.path.join(os.getcwd(), "Plugins", name)
+                    break
+            else:
+                self.path = os.getcwd()
+
         self.uplugin_file = pathlib.Path(
             self.path, '{}.uplugin'.format(self.name))
 
