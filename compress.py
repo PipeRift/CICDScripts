@@ -14,19 +14,28 @@ def compress():
     pass
 
 
+class InvalidCompressError(Exception):
+    pass
+
+
 @click.command()
 @click.option('-n', '--name', envvar="CI_PLUGIN_NAME", required=True, help="Name of the plugin (without .uplugin)")
-@click.option('-p', '--path', envvar="CI_PROJECT_DIR", required=True, type=click.Path(exists=True), help="Path that contains all plugin files")
+@click.option('-p', '--path', envvar="CI_PROJECT_DIR", type=click.Path(), help="Path that contains all plugin files")
 @click.option('-b', '--build-path', envvar="CI_PLUGIN_BUILD_DIR", type=click.Path(exists=True), help="Destination of the packaged plugin (default: {path}/Build)")
 @click.option('-d', '--destination', envvar="CI_PLUGIN_COMPRESSION_DIR", type=click.Path(exists=True), help="Folder that will contain the vault (default: {path}/Package)")
 def plugin(name, path, build_path, destination):
-    if not os.path.isdir(path):
-        click.echo("Path is not a folder or it doesn't exist ('{}')".format(path))
-        return -1
-
+    """Compresses a plugin for release. """
     plugin = env.Plugin(name, path, build_path)
+    if not os.path.isdir(plugin.build_path):
+        raise InvalidCompressError(
+            f"Build path doesn't exist ('{plugin.build_path}')")
+    version = plugin.get_version()
+
     if not destination:
         destination = os.path.join(plugin.path, "Package")
+
+    if not os.path.isabs(destination):
+        destination = os.path.abspath(destination)
 
     temp_path = os.path.join(destination, plugin.name)
     temp_path_rel = os.path.join('.', plugin.name)
@@ -35,19 +44,19 @@ def plugin(name, path, build_path, destination):
     import py7zr
 
     print("Clean destination folder")
-    remove(temp_path)
-    if not os.path.exists(path):
+    if not os.path.exists(destination):
         os.makedirs(destination)
 
     print("Remove old packaged Plugin")
-    file = os.path.join(destination, '{}{}.zip'.format(
-        plugin.name, plugin.get_compact_engine_version()))
-    file_bin = os.path.join(destination, '{}{}_Bin.zip'.format(
-        plugin.name, plugin.get_compact_engine_version()))
+    file = os.path.join(destination, '{}_v{}_{}.zip'.format(
+        plugin.name, plugin.get_version(), plugin.get_short_engine_version()))
+    file_bin = os.path.join(destination, '{}_v{}_{}_Bin.zip'.format(
+        plugin.name, plugin.get_version(), plugin.get_short_engine_version()))
     remove(file)
     remove(file_bin)
 
     print("Copy built plugin")
+    remove(temp_path)
     shutil.copytree(plugin.build_path, temp_path,
                     ignore=shutil.ignore_patterns('Intermediate', 'Docs', 'Build', 'Vault'))
 
