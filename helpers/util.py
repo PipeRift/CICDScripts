@@ -35,7 +35,8 @@ def remove(path):
 
 
 global platforms
-platforms = ["Windows_x64", "Windows_arm64", "Linux_x64",
+# Disabled for now: Windows_arm64
+platforms = ["Windows_x64", "Linux_x64",
              "Linux_arm64", "Mac", "Android", "IOS"]
 
 
