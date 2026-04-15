@@ -34,8 +34,8 @@ class Project(object):
             self.path, f"{name}.uproject")
 
         if not os.path.isfile(self.uproject_file):
-            raise InvalidProjectError("Project '{}' not found.\n.uproject file is missing ({}).".format(
-                self.name, self.uproject_file))
+            raise InvalidProjectError(
+                f"Project '{self.name}' not found.\n.uproject file is missing ({self.uproject_file}).")
 
         with open(self.uproject_file) as json_file:
             self.json = json.load(json_file)
