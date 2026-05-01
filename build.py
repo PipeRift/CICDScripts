@@ -12,7 +12,7 @@ def build():
 
 @click.command()
 @click.option('-n', '--name', envvar="CI_PROJECT_NAME", required=True, help="Name of the project (without .uproject)")
-@click.option('-p', '--path', envvar="CI_PROJECT_DIR", type=click.Path(exists=True), help="{colors.OKCYAN}(default: current path){colors.ENDC} Path that contains all project files")
+@click.option('-p', '--path', envvar="CI_PROJECT_DIR", type=click.Path(exists=True), help=f"{colors.OKCYAN}(default: current path){colors.ENDC} Path that contains all project files")
 @click.option('-b', '--build-path', envvar="CI_PROJECT_BUILD_DIR", type=click.Path(exists=True), help=f"{colors.OKCYAN}(default: <path>/Build){colors.ENDC}")
 @click.option('-e', '--engine-path', envvar="CI_ENGINE_DIR", type=click.Path(exists=True), help=f"{colors.OKCYAN}(default: auto-discovered){colors.ENDC}")
 @click.option('-c', '--config', envvar="CI_PROJECT_CONFIG", type=click.Choice(["Debug", "DebugGame", "Development", "Test", "Shipping"], case_sensitive=False), help=f"{colors.OKCYAN}(default: Development){colors.ENDC} Configuration to build in.")
@@ -58,7 +58,7 @@ build.add_command(project)
 
 @click.command()
 @click.option('-n', '--name', envvar="CI_PLUGIN_NAME", required=True, help="Name of the plugin (without .uplugin)")
-@click.option('-p', '--path', envvar="CI_PLUGIN_DIR", type=click.Path(exists=True), help="{colors.OKCYAN}(default: current path){colors.ENDC} Path that contains all plugin files")
+@click.option('-p', '--path', envvar="CI_PLUGIN_DIR", type=click.Path(exists=True), help=f"{colors.OKCYAN}(default: current path){colors.ENDC} Path that contains all plugin files")
 @click.option('-b', '--build-path', envvar="CI_PLUGIN_BUILD_DIR", type=click.Path(exists=True), help=f"{colors.OKCYAN}(default: <path>/Build){colors.ENDC}")
 @click.option('-e', '--engine-path', envvar="CI_ENGINE_DIR", type=click.Path(exists=True), help=f"{colors.OKCYAN}(default: auto-discovered){colors.ENDC}")
 @click.option('-a', '--all-platforms', is_flag=True, help="Build for all platforms available")
