@@ -1,4 +1,3 @@
-import click
 import sys
 import os
 import shutil
@@ -7,6 +6,7 @@ from helpers.util import *
 from helpers import env
 
 install('click')
+import click  # NOQA
 
 
 @click.group()

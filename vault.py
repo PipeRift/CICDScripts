@@ -5,12 +5,13 @@ from helpers.util import *
 from helpers.vault import Vault
 
 install('click')
-import click
+import click  # NOQA
 
 
 @click.group()
 def vaultCLI():
     pass
+
 
 @click.command()
 @click.option('-n', '--plugin-name', envvar="CI_PLUGIN", required=True, help="Name of the plugin (without .uplugin)")
@@ -26,12 +27,17 @@ def upload(plugin_name, path, vault_path, files_path):
     vault = Vault(os.path.join(env.project_path, "Vault"), env.vault_token)
 
     print("\n-- Copying files")
-    file = os.path.join(files_path, '{}{}.zip'.format(plugin.name, plugin.get_compact_engine_version()))
-    file_bin = os.path.join(files_path, '{}{}_Bin.zip'.format(plugin.name, plugin.get_compact_engine_version()))
-    vault.add([file, file_bin], os.path.join('.', plugin.name, env.commit_ref_name))
+    file = os.path.join(files_path, '{}{}.zip'.format(
+        plugin.name, plugin.get_compact_engine_version()))
+    file_bin = os.path.join(files_path, '{}{}_Bin.zip'.format(
+        plugin.name, plugin.get_compact_engine_version()))
+    vault.add([file, file_bin], os.path.join(
+        '.', plugin.name, env.commit_ref_name))
 
     print("\n-- Uploading files")
-    vault.push("[{}] Added packaged files ({}). Pipeline: {}".format(plugin.name, plugin.version, env.pipeline_url))
+    vault.push("[{}] Added packaged files ({}). Pipeline: {}".format(
+        plugin.name, plugin.version, env.pipeline_url))
+
 
 vaultCLI.add_command(upload)
 

@@ -1,10 +1,10 @@
-import click
 import sys
 import os
 from helpers.util import *
 from helpers import env, unreal, test_report
 
 install('click')
+import click  # NOQA
 
 
 @click.group()

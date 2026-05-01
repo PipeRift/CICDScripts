@@ -1,5 +1,3 @@
-from parse import *
-from helpers.junit_xml import TestSuite, TestCase
 import warnings
 from os import path
 from datetime import datetime, timedelta
@@ -9,6 +7,8 @@ from .util import install
 
 install('parse')
 install('six')
+from parse import * # NOQA
+from helpers.junit_xml import TestSuite, TestCase # NOQA Needs six
 
 
 def parse_date(text):
