@@ -104,7 +104,7 @@ class UAT(object):
             self.engine_path = engine_path
         else:
             self.is_default_engine_path = True
-            print(f"-- Finding engine path for version {version}")
+            print(f"-- Finding engine path for version {version} in {system()}")
             if system() == "Windows":
                 self.engine_path = get_default_engine_path_win(version)
             elif system() == "Linux":
