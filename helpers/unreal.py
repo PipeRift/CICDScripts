@@ -95,6 +95,7 @@ class UAT(object):
     is_default_engine_path = False
     engine_path = None
     uat_file = None
+    image_build_file = None
 
     def __init__(self, version=None, engine_path=None):
         self.version = version
@@ -124,6 +125,13 @@ class UAT(object):
         if not os.path.isfile(self.uat_file):
             raise InvalidUATError(
                 f"UAT not found at '{self.uat_file}'.")
+
+        images_path = os.path.join(
+            self.engine_path, "Engine", "Extras", "Containers", "Dockerfiles")
+        if system() == "Windows":
+            self.image_build_file = os.path.join(images_path, "windows", "Build.bat")
+        else:
+            self.image_build_file = os.path.join(images_path, "linux", "Build.sh")
 
     def run(self, args):  # Run UAT command
         command = [self.uat_file]
@@ -188,6 +196,16 @@ class UAT(object):
             self.run(args)
         except subprocess.CalledProcessError as e:
             print(f"-- Failed")
+            sys.exit(e.returncode)
+        print("-- Succeeded")
+
+    def build_image(self):
+        try:
+            command = [self.image_build_file]
+            print("   Build Image")
+            return run(command, self.engine_path)
+        except subprocess.CalledProcessError as e:
+            print("-- Failed")
             sys.exit(e.returncode)
         print("-- Succeeded")
 

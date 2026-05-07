@@ -52,7 +52,6 @@ def project(name, path, build_path, engine_path, config, platform, all_platforms
             f"-- Building platform {colors.OKGREEN}{pl}{colors.ENDC}")
         uat.build_project(project, config, pl)
 
-
 build.add_command(project)
 
 
@@ -71,8 +70,21 @@ def plugin(name, path, build_path, engine_path, all_platforms):
         f"{colors.WARNING}-- Building plugin {colors.OKGREEN}{plugin.name}{colors.WARNING} {platformstext}{colors.ENDC}")
     uat.build_plugin(plugin, all_platforms)
 
-
 build.add_command(plugin)
+
+
+@click.command()
+@click.option('-v', '--engine-version', envvar="CI_ENGINE_VERSION", required=True, help=f"{colors.OKCYAN}(default: auto-discovered){colors.ENDC}")
+@click.option('-e', '--engine-path', envvar="CI_ENGINE_PATH", type=click.Path(exists=True), help=f"{colors.OKCYAN}(default: auto-discovered){colors.ENDC}")
+def image(engine_version, engine_path):
+    """Builds an Unreal Engine container image """
+    uat = unreal.UAT(engine_version, engine_path)
+    click.echo(
+        f"{colors.WARNING}-- Building image for {colors.OKGREEN}{engine_version}{colors.ENDC}")
+    uat.build_image()
+
+build.add_command(image)
+
 
 if __name__ == '__main__':
     build()
