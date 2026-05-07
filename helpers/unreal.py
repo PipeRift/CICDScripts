@@ -45,6 +45,7 @@ def get_default_engine_path_win(version):
 
 def get_default_engine_path_linux(version):
     image_engine_path = os.path.join("home", "ue4", "UnrealEngine")
+    print(image_engine_path)
     if os.path.isdir(image_engine_path):
         return image_engine_path
 
