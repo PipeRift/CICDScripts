@@ -15,7 +15,7 @@ class Vault(object):
         self.path = path
 
         # Clone vault repository
-        vault_url = "https://oauth2:" + token + "@gitlab.com/piperift/ci-cd/vault.git"
+        vault_url = "https://oauth2:" + token + "@code.piperift.com/piperift/vault.git"
 
         # Make sure the folder is empty
         util.create_or_empty(path)
