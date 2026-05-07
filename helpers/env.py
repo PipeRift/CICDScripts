@@ -10,7 +10,7 @@ if commit_ref_name is None:
     commit_ref_name = "no_branch"
 
 pipeline_url = os.environ.get('CI_PIPELINE_URL')
-vault_token = os.environ.get('GITEA_TOKEN')
+vault_token = os.environ.get('CI_VAULT_TOKEN')
 
 
 class InvalidProjectError(Exception):
