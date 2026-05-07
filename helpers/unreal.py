@@ -203,7 +203,7 @@ class UAT(object):
         try:
             command = [self.image_build_file]
             print("   Build Image")
-            return run(command, self.engine_path)
+            return run(command, os.path.dirname(self.image_build_file))
         except subprocess.CalledProcessError as e:
             print("-- Failed")
             sys.exit(e.returncode)

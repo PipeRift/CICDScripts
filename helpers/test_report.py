@@ -5,7 +5,6 @@ from datetime import datetime, timedelta
 from . import env
 from .util import install
 
-install('parse')
 install('six')
 from parse import * # NOQA
 from helpers.junit_xml import TestSuite, TestCase # NOQA Needs six
