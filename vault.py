@@ -14,29 +14,30 @@ def vaultCLI():
 
 
 @click.command()
-@click.option('-n', '--plugin-name', envvar="CI_PLUGIN", required=True, help="Name of the plugin (without .uplugin)")
-@click.option('-p', '--path', envvar="CI_PROJECT_DIR", required=True, type=click.Path(exists=True), help="Path that contains all plugin files")
-@click.option('-v', '--vault-path', envvar="CI_PLUGIN_VAULT_DIR", type=click.Path(exists=True), help="Folder that will contain the vault (default: {path}/Vault)")
-@click.option('-f', '--files-path', envvar="CI_PLUGIN_COMPRESSION_DIR", type=click.Path(exists=True), help="Folder that will contain the vault (default: {path}/Package)")
-def upload(plugin_name, path, vault_path, files_path):
+@click.option('-n', '--name', envvar="CI_NAME", required=True, help="Name of the plugin or project (without .uplugin/.uproject)")
+@click.option('-p', '--path', envvar="CI_PATH", type=click.Path(), help="Path that contains all plugin/project files")
+@click.option('-z', '--zip-path', envvar="CI_ZIP_PATH", type=click.Path(exists=True), help="Folder that will contain the vault (default: {path}/Package)")
+@click.option('-v', '--vault-path', envvar="CI_VAULT_PATH", type=click.Path(exists=True), help="Folder that will contain the vault (default: {path}/Vault)")
+def upload(plugin_name, path, zip_path, vault_path):
     plugin = env.Plugin(plugin_name, path, vault_path=vault_path)
-    if not files_path:
-        files_path = os.path.join(plugin.path, "Package")
+
+    if not zip_path:
+        zip_path = os.path.join(plugin.path, "Package")
+
+    if not os.path.isabs(zip_path):
+        zip_path = os.path.abspath(zip_path)
 
     print("\n-- Clone vault")
     vault = Vault(os.path.join(env.project_path, "Vault"), env.vault_token)
 
     print("\n-- Copying files")
-    file = os.path.join(files_path, '{}{}.zip'.format(
-        plugin.name, plugin.get_compact_engine_version()))
-    file_bin = os.path.join(files_path, '{}{}_Bin.zip'.format(
-        plugin.name, plugin.get_compact_engine_version()))
+    file = os.path.join(zip_path, f'{plugin.name}_v{plugin.get_version()}_{plugin.get_short_engine_version()}.zip')
+    file_bin = os.path.join(zip_path, f'{plugin.name}_v{plugin.get_version()}_{plugin.get_short_engine_version()}_Bin.zip')
     vault.add([file, file_bin], os.path.join(
         '.', plugin.name, env.commit_ref_name))
 
     print("\n-- Uploading files")
-    vault.push("[{}] Added packaged files ({}). Pipeline: {}".format(
-        plugin.name, plugin.version, env.pipeline_url))
+    vault.push(f"[{plugin.name}] Added packaged files (v{plugin.get_version()} UE{plugin.get_short_engine_version()}). Pipeline: {env.pipeline_url}")
 
 
 vaultCLI.add_command(upload)
