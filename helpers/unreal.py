@@ -44,8 +44,7 @@ def get_default_engine_path_win(version):
 
 
 def get_default_engine_path_linux(version):
-    image_engine_path = os.path.join("home", "ue4", "UnrealEngine")
-    print(image_engine_path)
+    image_engine_path = os.path.join("/home", "ue4", "UnrealEngine")
     if os.path.isdir(image_engine_path):
         return image_engine_path
 
@@ -105,7 +104,7 @@ class UAT(object):
             self.engine_path = engine_path
         else:
             self.is_default_engine_path = True
-            print(f"-- Finding engine path for version {version} in {system()}")
+            print(f"-- Finding engine path for version {version}")
             if system() == "Windows":
                 self.engine_path = get_default_engine_path_win(version)
             elif system() == "Linux":
