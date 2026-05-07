@@ -6,7 +6,7 @@ from . import env
 from .util import install
 
 install('six')
-from parse import * # NOQA
+from helpers.parse import * # NOQA
 from helpers.junit_xml import TestSuite, TestCase # NOQA Needs six
 
 
