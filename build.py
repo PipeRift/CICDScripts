@@ -1,8 +1,6 @@
 from helpers.util import *
-from helpers import env, unreal, util
+from helpers import env, unreal, util, click
 from platform import system
-install('click')
-import click  # NOQA
 
 
 @click.group()
