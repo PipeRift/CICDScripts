@@ -104,6 +104,9 @@ class Plugin(object):
             else:
                 self.path = os.getcwd()
 
+        if not self.name: # If name is not given, try to resolve it from the folder name
+            self.name = os.path.basename(os.path.dirname(self.path))
+
         self.uplugin_file = pathlib.Path(
             self.path, '{}.uplugin'.format(self.name))
 
@@ -115,12 +118,13 @@ class Plugin(object):
             self.json = json.load(json_file)
 
         self.build_path = os.path.join(self.path, 'Build')
-        self.vault_path = os.path.join(self.path, 'Vault')
         if build_path:
             if os.path.isabs(build_path):
                 self.build_path = build_path
             else:
                 self.build_path = os.path.join(self.path, build_path)
+
+        self.vault_path = os.path.join(self.path, 'Vault')
         if vault_path:
             if os.path.isabs(vault_path):
                 self.vault_path = vault_path

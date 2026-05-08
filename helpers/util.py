@@ -16,6 +16,14 @@ def install(package):
     command.append(package)
     subprocess.call(command)
 
+def import_from_path(name, path):
+    try:
+        spec = importlib.util.spec_from_file_location(name, path)
+        module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(module)
+        return module
+    except:
+        return None
 
 def create_or_empty(path):
     if os.path.exists(path):

@@ -68,6 +68,8 @@ def plugin(name, path, build_path, engine_path, all_platforms):
         f"{colors.WARNING}-- Building plugin {colors.OKGREEN}{plugin.name}{colors.WARNING} {platformstext}{colors.ENDC}")
     uat.build_plugin(plugin, all_platforms)
 
+
+
 build.add_command(plugin)
 
 

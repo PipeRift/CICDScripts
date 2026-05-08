@@ -5,6 +5,7 @@ import subprocess
 import shutil
 from platform import system
 from . import env, test_report, util
+from helpers.util import *
 
 
 def run(command, cwd=None, shell=system() == "Windows"):
@@ -191,12 +192,29 @@ class UAT(object):
 
             if target_platform:
                 args.append(f"-targetplatforms={target_platform}")
-
         try:
             self.run(args)
         except subprocess.CalledProcessError as e:
             print(f"-- Failed")
             sys.exit(e.returncode)
+
+        # Try to find and import build.py of the plugin to gather extras
+        plugin_build = util.import_from_path(plugin.name, os.path.join(plugin.path, "build.py"))
+        if plugin_build and plugin_build.get_extras:
+            extras = plugin_build.get_extras()
+            extra_plugins = []
+            for extra in extras:
+                try:
+                    extra_plugin = env.Plugin(None, extra)
+                    print(extra_plugin)
+                    extra_plugin.build_path = os.path.join(plugin.build_path, "Extras", plugin.name)
+                    extra_plugins.add(extra_plugin)
+                except:
+                    extra_plugin = None # we dont care if this fails, it just means its not a plugin
+
+            if extra_plugins:
+                print(f"-- Building extra plugins: {colors.OKGREEN}{' '.join(map(lambda plugin: plugin.name, extra_plugins))}{colors.WARNING}")
+
         print("-- Succeeded")
 
     def build_image(self):
