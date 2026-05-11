@@ -4,6 +4,8 @@ import sys
 import os
 import shutil
 import importlib.util
+from platform import system
+from pathlib import Path
 
 
 def install(package):
@@ -51,6 +53,14 @@ platforms = ["Windows_x64", "Linux_x64",
 def get_platforms(match):
     return [p for p in platforms if match in p]
 
+def get_host_platforms():
+    if system() == "Linux":
+        return get_platforms("Linux")
+    elif system() == "Windows":
+        return get_platforms("Windows")
+    elif system() == "Darwin":
+        return get_platforms("Mac")
+    return []
 
 def to_ubt_platform(platform):
     os = platform.split('_')[0]
@@ -81,3 +91,7 @@ class colors:
     ENDC = '\033[0m'
     BOLD = '\033[1m'
     UNDERLINE = '\033[4m'
+
+
+def is_under_path(parent_path, path):
+    return Path(parent_path).is_relative_to(path)

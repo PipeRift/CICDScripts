@@ -6,6 +6,25 @@ import shutil
 from platform import system
 from . import env, test_report, util
 from helpers.util import *
+from enum import Enum
+
+
+# UEBuildTarget.cs:1066
+class TargetConfiguration(Enum):
+    # Unknown = 0
+    Debug = 1
+    DebugGame = 2
+    Development = 3
+    Test = 4
+    Shipping = 5
+
+# TargetRules.cs:21
+class TargetType(Enum):
+    Game = 1
+    Editor = 2
+    Client = 3
+    Server = 4
+    Program = 5
 
 
 def run(command, cwd=None, shell=system() == "Windows"):
@@ -50,37 +69,26 @@ def get_default_engine_path_linux(version):
         return image_engine_path
 
 
-def create_plugin_dummy_project(plugin, test_path):
-    if os.path.isfile(test_path):
-        raise AutomationError(f"Test path '{test_path}' is a file.")
-    elif not os.path.isdir(test_path):
-        os.makedirs(test_path)
-    elif os.listdir(test_path):  # not empty?
-        raise AutomationError(f"Test path '{test_path}' is not empty.")
+def create_host_project(path, plugins):
+    if os.path.isfile(path):
+        raise AutomationError(f"Host project path '{path}' is a file.")
+    elif not os.path.isdir(path):
+        os.makedirs(path)
+    elif os.listdir(path):  # not empty?
+        raise AutomationError(f"Host project path '{path}' is not empty.")
 
     # Create dummy .uproject file
-    uproject_file = os.path.join(test_path, f"{plugin.name}.uproject")
-    file = open(uproject_file, 'w')
-    file.write('{ \
-        "FileVersion": 3, \
-        "Plugins": \
-        [ \
-            { \
-                "Name": "' + plugin.name + '", \
-                "Enabled": true \
-            } \
-        ] \
-    }')
+    file = open(os.path.join(path, f"HostProject.uproject"), 'w')
+    plugin_jsons = map(lambda plugin: f'{{ "Name": "{plugin.name}", "Enabled": true }}', plugins)
+    file.write(f'{{ "FileVersion": 3, "Plugins": [{', '.join(plugin_jsons)}] }}')
     file.close()
 
-    # Get the plugin directory in the host project, and copy all the files in
-    host_plugin_dir = os.path.join(test_path, "Plugins", plugin.name)
+    # Copy plugins into host project
+    for plugin in plugins:
+        shutil.copytree(plugin.path, os.path.join(path, "Plugins", plugin.name),
+            ignore=shutil.ignore_patterns('Extras', 'Intermediate', 'Docs', 'Build', 'Vault'))
 
-    # Copy plugin into host project
-    shutil.copytree(plugin.build_path, host_plugin_dir,
-                    ignore=shutil.ignore_patterns('Intermediate'))
-
-    return uproject_file
+    return env.Project("HostProject", path)
 
 
 class InvalidUATError(Exception):
@@ -89,6 +97,21 @@ class InvalidUATError(Exception):
 
 class AutomationError(Exception):
     pass
+
+class BuildProjectConfig(object):
+    target_platforms = [] # Specify a list of target platforms to build. Default is all the Rocket target platforms.
+    target_type = TargetType.Game
+    configuration = TargetConfiguration.Development
+    cook = True
+    package = True
+    additional_args = []
+
+
+
+class BuildPluginConfig(object):
+    target_platforms = [] # Specify a list of target platforms to build. Default is all the Rocket target platforms.
+    strict_includes = True # Disables precompiled headers and unity build in order to check all source files have self-contained headers.
+    versioned = True # Do not embed the current engine version into the descriptor
 
 
 class UAT(object):
@@ -140,92 +163,121 @@ class UAT(object):
         print("   UAT: \"{}\"".format(" ".join(args)))
         return run(command, self.engine_path)
 
-    def build_project(self, project: env.Project, config, platform):
-        args = ["BuildCookRun",
-                f"-project={project.uproject_file}",
-                "-build",
-                "-compile",
-                "-nocompileeditor",
-                # f"-target={project.name}Game",
-                f"-clientconfig={config}",
-                f"-serverconfig={config}",
-                "-cook",
-                "-stage",
-                "-package",
-                "-pak",
-                "-compressed",
-                "-archive",
-                f"-archivedirectory={project.build_path}",
-                "-prereqs",
-                "-zenstore",
-                "-utf8output"]
+    def build_project(self, project: env.Project, config: BuildProjectConfig):
+        result = 0
+        for platform in config.target_platforms:
+            print(f"-- Building platform {colors.OKGREEN}{platform}{colors.ENDC}")
+            args = ["BuildCookRun",
+                    f"-project={project.uproject_file}",
+                    "-build",
+                    "-compile",
+                    "-nocompileeditor",
+                    # f"-target={project.name}Game",
+                    f"-clientconfig={config.configuration.name}",
+                    f"-serverconfig={config.configuration.name}",
+                    "-utf8output"]
 
-        ubt_platform = util.to_ubt_platform(platform)
-        if ubt_platform:
-            args.append(f"-Platform={ubt_platform}")
-        ubt_arch = util.to_ubt_architecture(platform)
-        if ubt_arch:
-            args.append(f"-SpecifiedArchitecture={ubt_arch}")
+            ubt_platform = util.to_ubt_platform(platform)
+            if ubt_platform:
+                args.append(f"-platform={ubt_platform}")
+            ubt_arch = util.to_ubt_architecture(platform)
+            if ubt_arch:
+                args.append(f"-specifiedarchitecture={ubt_arch}")
 
-        try:
-            self.run(args)
-        except subprocess.CalledProcessError as e:
-            print(f"-- Failed")
-            sys.exit(e.returncode)
-        print("-- Succeeded")
+            if config.cook:
+                args.extend(["-cook", "-zenstore"])
 
-    def build_plugin(self, plugin: env.Plugin, all_platforms=False):
+            if config.package:
+                args.extend([
+                    # Stage
+                    "-stage",
+                    "-prereqs",
+                    # Package
+                    "-package",
+                    "-pak",
+                    "-compressed",
+                    "-archive",
+                    f"-archivedirectory={project.build_path}"
+                ])
+
+            args.extend(config.additional_args)
+
+            try:
+                self.run(args)
+            except subprocess.CalledProcessError as e:
+                result = -1
+        return result
+
+    def build_plugin(self, plugin: env.Plugin, config: BuildPluginConfig, plugin_dependencies = []):
         args = ["BuildPlugin",
-                f"-plugin={plugin.uplugin_file}",
-                f"-package={plugin.build_path}", "-rocket",
-                "-Architecture_Windows=arm64+x64",
-                # "-Architecture_Linux=arm64+x64", Linux is considered two different platforms: Linux and LinuxARM64 (why epic?)
-                "-Architecture_Mac=arm64+x64",
-                "-Architecture_Android=arm64+x64",
-                "-Architecture_IOS=arm64",
-                "-StrictIncludes"]
-        if not all_platforms:
-            if system() == "Linux":
-                target_platform = "Linux"
-            elif system() == "Windows":
-                target_platform = "Win64"
+            f"-plugin={plugin.uplugin_file}",
+            f"-package={plugin.build_path}", "-rocket",
+            "-Architecture_Windows=arm64+x64",
+            # "-Architecture_Linux=arm64+x64", Linux is considered two different platforms: Linux and LinuxARM64 (why epic?)
+            "-Architecture_Mac=arm64+x64",
+            "-Architecture_Android=arm64+x64",
+            "-Architecture_IOS=arm64",
+            "-StrictIncludes"]
 
-            if target_platform:
-                args.append(f"-targetplatforms={target_platform}")
+        if config.target_platforms:
+            args.append(f"-targetplatforms={'+'.join(map(to_ubt_platform, config.target_platforms))}")
+
         try:
             self.run(args)
         except subprocess.CalledProcessError as e:
-            print(f"-- Failed")
-            sys.exit(e.returncode)
+            return -1
 
         # Try to find and import build.py of the plugin to gather extras
+        result = 0
         plugin_build = util.import_from_path(plugin.name, os.path.join(plugin.path, "build.py"))
         if plugin_build and plugin_build.get_extras:
             extras = plugin_build.get_extras()
             extra_plugins = []
+            extra_files = []
             for extra in extras:
                 try:
-                    extra_plugin = env.Plugin(None, extra)
-                    print(extra_plugin)
-                    extra_plugin.build_path = os.path.join(plugin.build_path, "Extras", plugin.name)
-                    extra_plugins.add(extra_plugin)
-                except:
-                    extra_plugin = None # we dont care if this fails, it just means its not a plugin
+                    extra_plugin = env.Plugin(None, os.path.join(plugin.path, extra))
+                    extra_plugin.build_path = os.path.join(plugin.build_path, extra)
+                    extra_plugins.append(extra_plugin)
+                except: # Not a plugin
+                    extra_files.append(extra)
 
+            # Build extra plugins into relative build folder
             if extra_plugins:
-                print(f"-- Building extra plugins: {colors.OKGREEN}{' '.join(map(lambda plugin: plugin.name, extra_plugins))}{colors.WARNING}")
+                print(f"{colors.OKGREEN}-- Building extra plugins: {colors.OKGREEN}{' '.join(map(lambda plugin: plugin.name, extra_plugins))}{colors.ENDC}")
+                engine_plugins_path = os.path.join(self.engine_path, "Engine", "Plugins")
+                plugin_was_installed = False
+                if os.path.isdir(os.path.join(engine_plugins_path, plugin.name)) or os.path.isdir(os.path.join(engine_plugins_path, "Marketplace", plugin.name)):
+                    plugin_was_installed = True
 
-        print("-- Succeeded")
+                if not plugin_was_installed:
+                    print(f"Installing base plugin in engine temporarily")
+                    shutil.copytree(plugin.build_path, os.path.join(engine_plugins_path, "Marketplace", plugin.name))
 
-    def build_image(self):
-        try:
-            command = [self.image_build_file]
-            print("   Build Image")
-            return run(command, os.path.dirname(self.image_build_file))
-        except subprocess.CalledProcessError as e:
-            print("-- Failed")
-            sys.exit(e.returncode)
-        print("-- Succeeded")
+                for extra_plugin in extra_plugins:
+                    extra_result = self.build_plugin(extra_plugin, config, [plugin])
+                    if result == 0:
+                        result = extra_result
+                
+                if not plugin_was_installed:
+                    shutil.rmtree(os.path.join(engine_plugins_path, "Marketplace", plugin.name), ignore_errors=True)
+
+            # Copy not-plugin extra files
+            print(f"{colors.OKGREEN}-- Copying extra files{colors.ENDC}")
+            for extra in extra_files:
+                src = os.path.join(plugin.path, extra)
+                dst = os.path.join(plugin.build_path, extra)
+                if os.path.isdir(src):
+                    shutil.copytree(src, dst)
+                elif os.path.isfile(src):
+                    shutil.copy2(src, dst)
+
+        return result
+    
+    def package_plugin(self, plugin: env.Plugin, package_path):
+        ignore = shutil.ignore_patterns('Extras', 'Intermediate', 'Docs', 'Build', 'Vault')
+        shutil.copytree(plugin.path, package_path, ignore = ignore)
+
 
     def run_automation(self, project, commands, editor=False, config=None, headless=True):
         args = ["RunUnreal",
@@ -258,11 +310,10 @@ class UAT(object):
         print("-- Succeeded")
 
     def run_plugin_tests(self, plugin: env.Plugin, test_path, all: bool, filters, tests, headless=True):
-        print("\n-- Create test dummy project")
-        uproject_file = create_plugin_dummy_project(plugin, test_path)
-        project = env.Project(plugin.name, test_path)
+        print("\n-- Create test host project")
+        host_project = create_host_project(test_path, [plugin])
         try:
-            self.run_project_tests(project, all, filters,
+            self.run_project_tests(host_project, all, filters,
                                    tests, True, None, headless)
 
             # Copy report back into plugin
@@ -301,14 +352,23 @@ class UAT(object):
             test_report.generate_project(project)
 
     def list_plugin_tests(self, plugin: env.Plugin, test_path):
-        print("\n-- Create test dummy project")
-        uproject_file = create_plugin_dummy_project(plugin, test_path)
-        project = env.Project(plugin.name, test_path)
+        print("\n-- Create test host project")
+        host_project = create_host_project(test_path, [plugin])
         try:
-            self.list_project_tests(project, True, None)
+            self.list_project_tests(host_project, True, None)
         finally:
             shutil.rmtree(test_path, ignore_errors=True)
 
     def list_project_tests(self, project: env.Project, editor=False, config=None):
         self.run_automation(project, ["List"],
                             editor, config, True)
+    
+    def build_image(self):
+        try:
+            command = [self.image_build_file]
+            print("   Build Image")
+            return run(command, os.path.dirname(self.image_build_file))
+        except subprocess.CalledProcessError as e:
+            print("-- Failed")
+            sys.exit(e.returncode)
+        print("-- Succeeded")

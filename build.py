@@ -13,7 +13,7 @@ def build():
 @click.option('-p', '--path', envvar="CI_PATH", type=click.Path(exists=True), help=f"{colors.OKCYAN}(default: current path){colors.ENDC} Path that contains all project files")
 @click.option('-b', '--build-path', envvar="CI_BUILD_PATH", type=click.Path(exists=True), help=f"{colors.OKCYAN}(default: <path>/Build){colors.ENDC}")
 @click.option('-e', '--engine-path', envvar="CI_ENGINE_PATH", type=click.Path(exists=True), help=f"{colors.OKCYAN}(default: auto-discovered){colors.ENDC}")
-@click.option('-c', '--config', envvar="CI_CONFIG", type=click.Choice(["Debug", "DebugGame", "Development", "Test", "Shipping"], case_sensitive=False), help=f"{colors.OKCYAN}(default: Development){colors.ENDC} Configuration to build in.")
+@click.option('-c', '--config', envvar="CI_CONFIG", type=click.Enum(unreal.TargetConfiguration, case_sensitive=False), help=f"{colors.OKCYAN}(default: Development){colors.ENDC} Configuration to build in.")
 @click.option('-pl', '--platform', envvar="CI_PLATFORM", type=click.Choice(util.platforms, case_sensitive=False), multiple=True, help=f"{colors.OKCYAN}(default: Current){colors.ENDC}")
 @click.option('-a', '--all-platforms', envvar="CI_ALL_PLATFORMS", is_flag=True, help="Build for all platforms available")
 def project(name, path, build_path, engine_path, config, platform, all_platforms):
@@ -25,30 +25,22 @@ def project(name, path, build_path, engine_path, config, platform, all_platforms
     uat = unreal.UAT(project.get_short_engine_version(), engine_path)
 
     if not platform:
-        if not all_platforms:
-            if system() == "Linux":
-                platform = util.get_platforms("Linux")
-            elif system() == "Windows":
-                platform = util.get_platforms("Windows")
-            elif system() == "Darwin":
-                platform = util.get_platforms("Mac")
-        else:
-            if system() == "Linux":
-                platform = util.get_platforms("Linux")
-            elif system() == "Windows":  # Windows can cross-compile to linux
-                platform = util.get_platforms(
-                    "Windows") + util.get_platforms("Linux")
-            elif system() == "Darwin":
-                platform = util.get_platforms("Mac")
+        platform = get_host_platforms()
+        if all_platforms:
+            if system() == "Windows":  # Windows can cross-compile to linux
+                platform.append(util.get_platforms("Linux"))
 
     platformstext = f'{colors.WARNING}|{colors.OKGREEN}'.join(platform)
     click.echo(
         f"{colors.WARNING}-- Building project {colors.OKGREEN}{project.name}{colors.WARNING} ({colors.OKGREEN}{config}{colors.WARNING}) for {colors.OKGREEN}{platformstext}{colors.ENDC}")
 
-    for pl in platform:
-        click.echo(
-            f"-- Building platform {colors.OKGREEN}{pl}{colors.ENDC}")
-        uat.build_project(project, config, pl)
+    settings = unreal.BuildProjectConfig()
+    settings.config = config
+    settings.target_platforms = platform
+    if uat.build_project(project, settings) != 0:
+        print("-- Failed")
+        sys.exit(-1)
+    print("-- Succeeded")
 
 build.add_command(project)
 
@@ -58,15 +50,21 @@ build.add_command(project)
 @click.option('-p', '--path', envvar="CI_PATH", type=click.Path(exists=True), help=f"{colors.OKCYAN}(default: current path){colors.ENDC} Path that contains all plugin files")
 @click.option('-b', '--build-path', envvar="CI_BUILD_PATH", type=click.Path(exists=True), help=f"{colors.OKCYAN}(default: <path>/Build){colors.ENDC}")
 @click.option('-e', '--engine-path', envvar="CI_ENGINE_PATH", type=click.Path(exists=True), help=f"{colors.OKCYAN}(default: auto-discovered){colors.ENDC}")
-@click.option('-a', '--all-platforms', envvar="CI_ALL_PLATFORMS", is_flag=True, help="Build for all platforms available")
-def plugin(name, path, build_path, engine_path, all_platforms):
+@click.option('-pl', '--platform', envvar="CI_PLATFORM", type=click.Choice(util.platforms, case_sensitive=False), multiple=True, help=f"{colors.OKCYAN}(default: Current){colors.ENDC}")
+def plugin(name, path, build_path, engine_path, platform):
     """Packages a plugin for the desired platform. """
     plugin = env.Plugin(name, path, build_path)
     uat = unreal.UAT(plugin.get_short_engine_version(), engine_path)
-    platformstext = 'for all platforms' if all_platforms else "for current platform"
+    platformstext = f'for {', '.join(platform)} platforms' if platform else "for default platforms"
     click.echo(
         f"{colors.WARNING}-- Building plugin {colors.OKGREEN}{plugin.name}{colors.WARNING} {platformstext}{colors.ENDC}")
-    uat.build_plugin(plugin, all_platforms)
+    
+    config = unreal.BuildPluginConfig()
+    config.target_platforms = platform
+    if uat.build_plugin(plugin, config) != 0:
+        print("-- Failed")
+        sys.exit(-1)
+    print("-- Succeeded")
 
 
 

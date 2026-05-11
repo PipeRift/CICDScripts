@@ -96,6 +96,9 @@ class Plugin(object):
         if path:
             self.path = os.path.abspath(path)
         else:
+            if not self.name:
+                raise InvalidPluginError("Plugin didn't get path or name.")
+
             # Is there a uproject in the folder?
             for filename in os.listdir(path):
                 if filename.endswith('.uproject'):
@@ -104,15 +107,16 @@ class Plugin(object):
             else:
                 self.path = os.getcwd()
 
+        if not os.path.isdir(self.path):
+            raise InvalidPluginError(f"Plugin path '{self.path}' is a file.")
+
         if not self.name: # If name is not given, try to resolve it from the folder name
-            self.name = os.path.basename(os.path.dirname(self.path))
+            self.name = os.path.basename(self.path)
 
-        self.uplugin_file = pathlib.Path(
-            self.path, '{}.uplugin'.format(self.name))
-
+        print(f"Name: {self.name}  Path: {self.path}")
+        self.uplugin_file = pathlib.Path(self.path, f'{self.name}.uplugin')
         if not os.path.isfile(self.uplugin_file):
-            raise InvalidPluginError("Plugin '{}' not found.\n.uplugin file is missing ({}).".format(
-                self.name, self.uplugin_file))
+            raise InvalidPluginError(f"Plugin '{self.name}' not found.\n.uplugin file is missing ({self.uplugin_file}).")
 
         with open(self.uplugin_file) as json_file:
             self.json = json.load(json_file)
