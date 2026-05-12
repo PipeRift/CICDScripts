@@ -55,7 +55,7 @@ def plugin(name, path, build_path, engine_path, platform):
     """Packages a plugin for the desired platform. """
     plugin = env.Plugin(name, path, build_path)
     uat = unreal.UAT(plugin.get_short_engine_version(), engine_path)
-    platformstext = f'for {', '.join(platform)} platforms' if platform else "for default platforms"
+    platformstext = f"for {', '.join(platform)} platforms" if platform else "for default platforms"
     click.echo(
         f"{colors.WARNING}-- Building plugin {colors.OKGREEN}{plugin.name}{colors.WARNING} {platformstext}{colors.ENDC}")
     
