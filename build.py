@@ -13,10 +13,10 @@ def build():
 @click.option('-p', '--path', envvar="CI_PATH", type=click.Path(exists=True), help=f"{colors.OKCYAN}(default: current path){colors.ENDC} Path that contains all project files")
 @click.option('-b', '--build-path', envvar="CI_BUILD_PATH", type=click.Path(exists=True), help=f"{colors.OKCYAN}(default: <path>/Build){colors.ENDC}")
 @click.option('-e', '--engine-path', envvar="CI_ENGINE_PATH", type=click.Path(exists=True), help=f"{colors.OKCYAN}(default: auto-discovered){colors.ENDC}")
-@click.option('-c', '--config', envvar="CI_CONFIG", type=click.Enum(unreal.TargetConfiguration, case_sensitive=False), help=f"{colors.OKCYAN}(default: Development){colors.ENDC} Configuration to build in.")
+@click.option('-c', '--config', envvar="CI_CONFIG", type=click.Choice(unreal.TargetConfiguration, case_sensitive=False), help=f"{colors.OKCYAN}(default: Development){colors.ENDC} Configuration to build in.")
 @click.option('-pl', '--platform', envvar="CI_PLATFORM", type=click.Choice(util.platforms, case_sensitive=False), multiple=True, help=f"{colors.OKCYAN}(default: Current){colors.ENDC}")
 @click.option('-a', '--all-platforms', envvar="CI_ALL_PLATFORMS", is_flag=True, help="Build for all platforms available")
-def project(name, path, build_path, engine_path, config, platform, all_platforms):
+def project(name, path, build_path, engine_path, config: unreal.TargetConfiguration, platform, all_platforms):
     """Packages a project for the desired platform. """
     if not config:
         config = "Development"

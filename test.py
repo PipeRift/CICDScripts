@@ -17,7 +17,7 @@ def test():
 @click.option('-p', '--path', envvar="CI_PROJECT_DIR", type=click.Path(exists=True), help=f"{colors.OKCYAN}(default: current path){colors.ENDC} Path that contains all project files")
 @click.option('-b', '--build-path', envvar="CI_PROJECT_BUILD_DIR", type=click.Path(exists=True), help=f"{colors.OKCYAN}(default: <path>/Build){colors.ENDC}")
 @click.option('-e', '--engine-path', envvar="CI_ENGINE_DIR", type=click.Path(exists=True), help="Path to the engine (default: auto-discovered)")
-@click.option('-c', '--config', envvar="CI_PROJECT_CONFIG", type=click.Enum(unreal.TargetConfiguration, case_sensitive=False), help=f"{colors.OKCYAN}(default: Development){colors.ENDC} Configuration to test in.")
+@click.option('-c', '--config', envvar="CI_PROJECT_CONFIG", type=click.Choice(unreal.TargetConfiguration, case_sensitive=False), help=f"{colors.OKCYAN}(default: Development){colors.ENDC} Configuration to test in.")
 @click.option('-ed', '--editor', is_flag=True, help="Should tests run in editor?")
 @click.option('-rhi', '--rhi', is_flag=True, help="Should tests run with rendering? (not headless)")
 @click.option('-a', '--all', is_flag=True, help="Should tests run with rendering?")
