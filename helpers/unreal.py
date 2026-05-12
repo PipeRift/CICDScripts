@@ -79,8 +79,8 @@ def create_host_project(path, plugins):
 
     # Create dummy .uproject file
     file = open(os.path.join(path, f"HostProject.uproject"), 'w')
-    plugin_jsons = map(lambda plugin: f'{{ "Name": "{plugin.name}", "Enabled": true }}', plugins)
-    file.write(f'{{ "FileVersion": 3, "Plugins": [{', '.join(plugin_jsons)}] }}')
+    plugin_jsons = map(lambda plugin: f"{{ \"Name\": \"{plugin.name}\", \"Enabled\": true }}", plugins)
+    file.write(f"{{ \"FileVersion\": 3, \"Plugins\": [{', '.join(plugin_jsons)}] }}")
     file.close()
 
     # Copy plugins into host project
