@@ -40,8 +40,8 @@ class Project(object):
             raise InvalidProjectError(
                 f"Project '{self.name}' not found.\n.uproject file is missing ({self.uproject_file}).")
 
-        with open(self.uproject_file) as json_file:
-            self.json = json.load(json_file)
+        with open(self.uplugin_file, "rb") as json_file:
+            self.json = json.loads(json_file.read())
 
         self.build_path = os.path.join(self.path, 'Build')
         self.test_path = os.path.join(self.path, 'Test')
@@ -120,8 +120,8 @@ class Plugin(object):
         if not os.path.isfile(self.uplugin_file):
             raise InvalidPluginError(f"Plugin '{self.name}' not found.\n.uplugin file is missing ({self.uplugin_file}).")
 
-        with open(self.uplugin_file) as json_file:
-            self.json = json.load(json_file)
+        with open(self.uplugin_file, "rb") as json_file:
+            self.json = json.loads(json_file.read())
 
         self.build_path = os.path.join(self.path, 'Build')
         if build_path:
