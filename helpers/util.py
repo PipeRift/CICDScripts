@@ -95,3 +95,6 @@ class colors:
 
 def is_under_path(parent_path, path):
     return Path(parent_path).is_relative_to(path)
+
+def run(command, cwd=None, shell=system() == "Windows"):
+    return subprocess.check_call(command, cwd=cwd, shell=shell)

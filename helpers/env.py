@@ -30,8 +30,11 @@ class Project(object):
     def __init__(self, name, path, build_path=None, test_path=None, vault_path=None):
         self.name = name
         self.path = os.path.abspath(path) if path else os.getcwd()
+        if not self.name: # If name is not given, try to resolve it from the folder name
+            self.name = os.path.basename(self.path)
+
         self.uproject_file = os.path.join(
-            self.path, f"{name}.uproject")
+            self.path, f"{self.name}.uproject")
 
         if not os.path.isfile(self.uproject_file):
             raise InvalidProjectError(
@@ -113,7 +116,6 @@ class Plugin(object):
         if not self.name: # If name is not given, try to resolve it from the folder name
             self.name = os.path.basename(self.path)
 
-        print(f"Name: {self.name}  Path: {self.path}")
         self.uplugin_file = pathlib.Path(self.path, f'{self.name}.uplugin')
         if not os.path.isfile(self.uplugin_file):
             raise InvalidPluginError(f"Plugin '{self.name}' not found.\n.uplugin file is missing ({self.uplugin_file}).")

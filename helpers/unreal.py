@@ -27,10 +27,6 @@ class TargetType(Enum):
     Program = 5
 
 
-def run(command, cwd=None, shell=system() == "Windows"):
-    return subprocess.check_call(command, cwd=cwd, shell=shell)
-
-
 def get_default_engine_path_win(version):
     import winreg
 
