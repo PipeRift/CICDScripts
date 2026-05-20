@@ -3,7 +3,7 @@ import os
 import shutil
 
 from helpers.util import *
-from helpers import env
+from helpers import env, util
 
 install('click')
 import click  # NOQA
@@ -65,6 +65,18 @@ def plugin(name, path, build_path, zip_path):
     print("Copy Config")
     shutil.copytree(os.path.join(plugin.path, 'Config'),
                     os.path.join(temp_path, 'Config'))
+
+    plugin_build = util.import_from_path(plugin.name, os.path.join(plugin.path, "build.py"))
+    if plugin_build and plugin_build.compress_additional_plugins:
+        print("Compress Additional Plugins")
+        additional_plugins = plugin_build.compress_additional_plugins()
+        for addt_plugin in additional_plugins:
+            addt_plugin = os.path.join(temp_path, addt_plugin)
+            for f in ["Docs", "Binaries", "Intermediate"]: shutil.rmtree(os.path.join(addt_plugin, f), True) # Remove unwanted folders
+            os.chdir(os.path.dirname(addt_plugin))
+            with py7zr.SevenZipFile(f'{os.path.basename(addt_plugin)}.zip', 'w') as f:
+                f.writeall(os.path.basename(addt_plugin))
+            shutil.rmtree(addt_plugin, True)
 
     print("Compress Plugin with Binaries")
     os.chdir(zip_path)

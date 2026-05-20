@@ -223,50 +223,53 @@ class UAT(object):
         except subprocess.CalledProcessError as e:
             return -1
 
-        # Try to find and import build.py of the plugin to gather extras
+        # Try to find and import build.py of the plugin
         result = 0
         plugin_build = util.import_from_path(plugin.name, os.path.join(plugin.path, "build.py"))
-        if plugin_build and plugin_build.get_extras:
-            extras = plugin_build.get_extras()
-            extra_plugins = []
-            extra_files = []
-            for extra in extras:
-                try:
-                    extra_plugin = env.Plugin(None, os.path.join(plugin.path, extra))
-                    extra_plugin.build_path = os.path.join(plugin.build_path, extra)
-                    extra_plugins.append(extra_plugin)
-                except: # Not a plugin
-                    extra_files.append(extra)
+        if plugin_build:
+            if plugin_build.get_additional_plugins:
+                plugin_paths = plugin_build.get_additional_plugins()
+                addt_plugins = []
+                for path in plugin_paths:
+                    try:
+                        addt_plugin = env.Plugin(None, os.path.join(plugin.path, path))
+                        addt_plugin.build_path = os.path.join(plugin.build_path, path)
+                        addt_plugins.append(addt_plugin)
+                    except: # Not a plugin
+                        print(f"Not a plugin '{path}'")
 
-            # Build extra plugins into relative build folder
-            if extra_plugins:
-                print(f"{colors.OKGREEN}-- Building extra plugins: {colors.OKGREEN}{' '.join(map(lambda plugin: plugin.name, extra_plugins))}{colors.ENDC}")
-                engine_plugins_path = os.path.join(self.engine_path, "Engine", "Plugins")
-                plugin_was_installed = False
-                if os.path.isdir(os.path.join(engine_plugins_path, plugin.name)) or os.path.isdir(os.path.join(engine_plugins_path, "Marketplace", plugin.name)):
-                    plugin_was_installed = True
+                # Build additional plugins into relative build folder
+                if addt_plugins:
+                    print(f"{colors.OKGREEN}-- Building additional plugins: {colors.OKGREEN}{' '.join(map(lambda plugin: plugin.name, addt_plugins))}{colors.ENDC}")
+                    engine_plugins_path = os.path.join(self.engine_path, "Engine", "Plugins")
+                    plugin_was_installed = False
+                    if os.path.isdir(os.path.join(engine_plugins_path, plugin.name)) or os.path.isdir(os.path.join(engine_plugins_path, "Marketplace", plugin.name)):
+                        plugin_was_installed = True
 
-                if not plugin_was_installed:
-                    print(f"Installing base plugin in engine temporarily")
-                    shutil.copytree(plugin.build_path, os.path.join(engine_plugins_path, "Marketplace", plugin.name))
+                    if not plugin_was_installed:
+                        print(f"Installing base plugin in engine temporarily")
+                        shutil.copytree(plugin.build_path, os.path.join(engine_plugins_path, "Marketplace", plugin.name))
 
-                for extra_plugin in extra_plugins:
-                    extra_result = self.build_plugin(extra_plugin, config, [plugin])
-                    if result == 0:
-                        result = extra_result
-                
-                if not plugin_was_installed:
-                    shutil.rmtree(os.path.join(engine_plugins_path, "Marketplace", plugin.name), ignore_errors=True)
+                    for addt_plugin in addt_plugins:
+                        r = self.build_plugin(addt_plugin, config, [plugin])
+                        if result == 0:
+                            result = r
+                    
+                    if not plugin_was_installed:
+                        shutil.rmtree(os.path.join(engine_plugins_path, "Marketplace", plugin.name), ignore_errors=True)
 
-            # Copy not-plugin extra files
-            print(f"{colors.OKGREEN}-- Copying extra files{colors.ENDC}")
-            for extra in extra_files:
-                src = os.path.join(plugin.path, extra)
-                dst = os.path.join(plugin.build_path, extra)
-                if os.path.isdir(src):
-                    shutil.copytree(src, dst)
-                elif os.path.isfile(src):
-                    shutil.copy2(src, dst)
+            if plugin_build.get_copy_post_build:
+                post_build_paths = plugin_build.get_copy_post_build()
+                print(f"{colors.OKGREEN}-- Copying post-build files{colors.ENDC}")
+                for path in post_build_paths:
+                    src = os.path.join(plugin.path, path)
+                    dst = os.path.join(plugin.build_path, path)
+                    print(f"'{src}' to '{dst}'")
+                    os.makedirs(os.path.dirname(dst), exist_ok=True)
+                    if os.path.isdir(src):
+                        shutil.copytree(src, dst)
+                    elif os.path.isfile(src):
+                        shutil.copy2(src, dst)
 
         return result
     
