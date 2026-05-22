@@ -34,7 +34,9 @@ def get_default_engine_path_win(version):
     reg_path = rf"SOFTWARE\EpicGames\Unreal Engine\{version}"
     try:
         with winreg.OpenKey(winreg.HKEY_LOCAL_MACHINE, reg_path, 0, winreg.KEY_READ) as key:
-            return winreg.QueryValueEx(key, "InstalledDirectory")[0]
+            install_location = winreg.QueryValueEx(key, "InstalledDirectory")[0]
+            if os.path.exists(install_location):
+                return install_location
     except (FileNotFoundError, OSError):
         pass
 
@@ -50,7 +52,9 @@ def get_default_engine_path_win(version):
                     data = json.load(f)
                     # Look for "UE_5.7" or similar
                     if version in data.get("MandatoryAppFolderName", ""):
-                        return data.get("InstallLocation")
+                        install_location = data.get("InstallLocation")
+                        if os.path.exists(install_location):
+                            return install_location 
             except (json.JSONDecodeError, IOError):
                 continue
 
