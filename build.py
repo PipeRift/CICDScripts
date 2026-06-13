@@ -28,7 +28,7 @@ def project(name, path, build_path, engine_path, config: unreal.TargetConfigurat
         platform = get_host_platforms()
         if all_platforms:
             if system() == "Windows":  # Windows can cross-compile to linux
-                platform.append(util.get_platforms("Linux"))
+                platform.extend(util.get_platforms("Linux"))
 
     platformstext = f'{colors.WARNING}|{colors.OKGREEN}'.join(platform)
     click.echo(
