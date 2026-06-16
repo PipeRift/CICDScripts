@@ -105,6 +105,7 @@ class BuildProjectConfig(object):
     cook = True
     package = True
     additional_args = []
+    settings = False
 
 
 
@@ -171,7 +172,6 @@ class UAT(object):
                     f"-project={project.uproject_file}",
                     "-build",
                     "-compile",
-                    "-nocompileeditor",
                     # f"-target={project.name}Game",
                     f"-clientconfig={config.configuration.name}",
                     f"-serverconfig={config.configuration.name}",
@@ -199,6 +199,9 @@ class UAT(object):
                     "-archive",
                     f"-archivedirectory={project.build_path}"
                 ])
+
+            if not config.editor:
+                args.append("-nocompileeditor")
 
             args.extend(config.additional_args)
 

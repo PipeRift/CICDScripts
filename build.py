@@ -16,7 +16,8 @@ def build():
 @click.option('-c', '--config', envvar="CI_CONFIG", type=click.Choice(unreal.TargetConfiguration, case_sensitive=False), help=f"{colors.OKCYAN}(default: Development){colors.ENDC} Configuration to build in.")
 @click.option('-pl', '--platform', envvar="CI_PLATFORM", type=click.Choice(util.platforms, case_sensitive=False), multiple=True, help=f"{colors.OKCYAN}(default: Current){colors.ENDC}")
 @click.option('-a', '--all-platforms', envvar="CI_ALL_PLATFORMS", is_flag=True, help="Build for all platforms available")
-def project(name, path, build_path, engine_path, config: unreal.TargetConfiguration, platform, all_platforms):
+@click.option('-ed', '--editor', envvar="CI_BUILD_EDITOR", is_flag=True, help="Build editor binaries")
+def project(name, path, build_path, engine_path, config: unreal.TargetConfiguration, platform, all_platforms, editor):
     """Packages a project for the desired platform. """
     if not config:
         config = "Development"
@@ -37,6 +38,7 @@ def project(name, path, build_path, engine_path, config: unreal.TargetConfigurat
     settings = unreal.BuildProjectConfig()
     settings.config = config
     settings.target_platforms = platform
+    settings.editor = editor
     if uat.build_project(project, settings) != 0:
         print("-- Failed")
         sys.exit(-1)
