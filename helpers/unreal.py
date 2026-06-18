@@ -169,13 +169,14 @@ class UAT(object):
         for platform in config.target_platforms:
             print(f"-- Building platform {colors.OKGREEN}{platform}{colors.ENDC}")
             args = ["BuildCookRun",
-                    f"-project={project.uproject_file}",
-                    "-build",
-                    "-compile",
-                    # f"-target={project.name}Game",
-                    f"-clientconfig={config.configuration.name}",
-                    f"-serverconfig={config.configuration.name}",
-                    "-utf8output"]
+                f"-project={project.uproject_file}",
+                "-build",
+                "-compile",
+                # f"-target={project.name}Game",
+                f"-clientconfig={config.configuration.name}",
+                f"-serverconfig={config.configuration.name}",
+                "-utf8output"
+            ]
 
             ubt_platform = util.to_ubt_platform(platform)
             if ubt_platform:
@@ -220,7 +221,8 @@ class UAT(object):
             "-Architecture_Mac=arm64+x64",
             "-Architecture_Android=arm64+x64",
             "-Architecture_IOS=arm64",
-            "-StrictIncludes"]
+            "-StrictIncludes"
+        ]
 
         if config.target_platforms:
             args.append(f"-targetplatforms={'+'.join(map(to_ubt_platform, config.target_platforms))}")
