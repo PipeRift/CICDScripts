@@ -2,7 +2,6 @@ import shutil
 import subprocess
 import sys
 import os
-import shutil
 import importlib.util
 from platform import system
 from pathlib import Path
@@ -63,8 +62,9 @@ def get_host_platforms():
     return []
 
 def to_ubt_platform(platform):
-    os = platform.split('_')[0]
-    arch = platform.split('_')[1]
+    parts = platform.split('_')
+    os = parts[0]
+    arch = parts[1] if len(parts) > 1 else None
     if os == "Windows":
         return "Win64"
     elif os == "Linux":
@@ -73,8 +73,9 @@ def to_ubt_platform(platform):
 
 
 def to_ubt_architecture(platform):
-    os = platform.split('_')[0]
-    arch = platform.split('_')[1]
+    parts = platform.split('_')
+    os = parts[0]
+    arch = parts[1] if len(parts) > 1 else None
 
     if os == "Windows":
         return arch

@@ -91,12 +91,15 @@ def create_host_project(path, plugins):
     return env.Project("HostProject", path)
 
 
-class InvalidUATError(Exception):
+class InvalidEngineError(Exception):
     pass
 
 
 class AutomationError(Exception):
     pass
+
+class GenerateProjectConfig(object):
+    additional_args = []
 
 class BuildProjectConfig(object):
     target_platforms = [] # Specify a list of target platforms to build. Default is all the Rocket target platforms.
@@ -106,6 +109,7 @@ class BuildProjectConfig(object):
     package = True
     additional_args = []
     settings = False
+    editor = False
 
 
 
@@ -115,7 +119,7 @@ class BuildPluginConfig(object):
     versioned = True # Do not embed the current engine version into the descriptor
 
 
-class UAT(object):
+class Unreal(object):
     version = None
     is_default_engine_path = False
     engine_path = None
@@ -137,19 +141,21 @@ class UAT(object):
         print(f"   {self.engine_path}")
 
         if not os.path.isdir(self.engine_path):
-            raise InvalidUATError(
+            raise InvalidEngineError(
                 f"Engine path '{self.engine_path}' not found.")
 
-        scripts_path = os.path.join(
-            self.engine_path, "Engine", "Build", "BatchFiles")
         if system() == "Windows":
-            self.uat_file = os.path.join(scripts_path, "RunUAT.bat")
+            self.uat_file = os.path.join(self.engine_path, "Engine", "Build", "BatchFiles", "RunUAT.bat")
         else:
-            self.uat_file = os.path.join(scripts_path, "RunUAT.sh")
-
+            self.uat_file = os.path.join(self.engine_path, "Engine", "Build", "BatchFiles", "RunUAT.sh")
         if not os.path.isfile(self.uat_file):
-            raise InvalidUATError(
-                f"UAT not found at '{self.uat_file}'.")
+            raise InvalidEngineError(
+                f"UnrealAutomationTool not found at '{self.uat_file}'.")
+
+        self.ubt_file = os.path.join(self.engine_path, "Engine", "Binaries", "DotNET", "UnrealBuildTool", "UnrealBuildTool.exe")
+        if not os.path.isfile(self.ubt_file):
+            raise InvalidEngineError(
+                f"UnrealBuildTool not found at '{self.ubt_file}'.")
 
         images_path = os.path.join(
             self.engine_path, "Engine", "Extras", "Containers", "Dockerfiles")
@@ -158,11 +164,37 @@ class UAT(object):
         else:
             self.image_build_file = os.path.join(images_path, "linux", "Build.sh")
 
-    def run(self, args):  # Run UAT command
+    def run_UAT(self, args):  # Run UAT command
         command = [self.uat_file]
         command.extend(args)
         print("   UAT: \"{}\"".format(" ".join(args)))
         return run(command, self.engine_path)
+
+    def run_UBT(self, args):  # Run UBT command
+        command = [self.ubt_file]
+        command.extend(args)
+        print("   UBT: \"{}\"".format(" ".join(args)))
+        return run(command, self.engine_path)
+
+    def generate_project(self, project: env.Project, config: GenerateProjectConfig):
+        result = 0
+        platform = get_host_platforms()[0] # For now just use the first
+        args = [
+            f"-project={project.uproject_file}",
+            f"-OutputDir={project.path}/.vscode",
+            "-game",
+            "-engine",
+            f"{project.name}Editor",
+            "Development",
+            to_ubt_platform(platform)
+        ]
+        args.extend(config.additional_args)
+
+        try:
+            self.run_UBT(args)
+        except subprocess.CalledProcessError as e:
+            result = -1
+        return result
 
     def build_project(self, project: env.Project, config: BuildProjectConfig):
         result = 0
@@ -207,7 +239,7 @@ class UAT(object):
             args.extend(config.additional_args)
 
             try:
-                self.run(args)
+                self.run_UAT(args)
             except subprocess.CalledProcessError as e:
                 result = -1
         return result
@@ -228,7 +260,7 @@ class UAT(object):
             args.append(f"-targetplatforms={'+'.join(map(to_ubt_platform, config.target_platforms))}")
 
         try:
-            self.run(args)
+            self.run_UAT(args)
         except subprocess.CalledProcessError as e:
             return -1
 
@@ -290,7 +322,7 @@ class UAT(object):
     def run_automation(self, project, commands, editor=False, config=None, headless=True):
         args = ["RunUnreal",
                 "-nop4",
-                "-unatended",
+                "-unattended",
                 "-nopause",
                 "-nosplash",
                 f"-project={project.uproject_file}",
@@ -311,7 +343,7 @@ class UAT(object):
         args.append(f"-ExecCmds=automation {';'.join(commands)};quit")
 
         try:
-            self.run(args)
+            self.run_UAT(args)
         except subprocess.CalledProcessError as e:
             print("-- Failed")
             sys.exit(e.returncode)
@@ -326,7 +358,7 @@ class UAT(object):
 
             # Copy report back into plugin
             report_path = os.path.join(plugin.path, "Report.xml")
-            project_report_path = os.path.join(project.path, "Report.xml")
+            project_report_path = os.path.join(host_project.path, "Report.xml")
             if os.path.isfile(report_path):
                 os.remove(report_path)
             if os.path.isfile(project_report_path):
@@ -342,7 +374,7 @@ class UAT(object):
         if len(filters) > 0:
             print(f"   Filters: {' '.join(filters)}")
             for filter in filters:
-                commands.append("RunFilter {filter}")
+                commands.append(f"RunFilter {filter}")
         # Enqueue a 'RunTests' command for any individual test names that were specified
         if len(tests) > 0:
             print(f"   Tests: {' '.join(tests)}")

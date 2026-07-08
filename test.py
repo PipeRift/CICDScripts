@@ -27,10 +27,10 @@ def project(name, path, build_path, engine_path, config, editor, rhi, all, filte
     if not config:
         config = "Development"
     project = env.Project(name, path, build_path)
-    uat = unreal.UAT(project.get_short_engine_version(), engine_path)
+    ue = unreal.Unreal(project.get_short_engine_version(), engine_path)
 
     print(f"-- Run tests for project {project.name}")
-    uat.run_project_tests(project, all, filter, test,
+    ue.run_project_tests(project, all, filter, test,
                           editor, config, not rhi)
 
 
@@ -48,7 +48,7 @@ test.add_command(project)
 @click.option('-t', '--test', help="If provided, specific tests that should run. '-t A -t B' or '-t {A, B}'", multiple=True)
 def plugin(name, path, test_path, engine_path, rhi, all, filter, test):
     plugin = env.Plugin(name, path)
-    uat = unreal.UAT(plugin.get_short_engine_version(), engine_path)
+    ue = unreal.Unreal(plugin.get_short_engine_version(), engine_path)
 
     if not test_path:
         test_path = os.path.join(plugin.path, 'Test')
@@ -56,7 +56,7 @@ def plugin(name, path, test_path, engine_path, rhi, all, filter, test):
         test_path = os.path.join(plugin.path, test_path)
 
     print(f"-- Run tests for plugin {plugin.name}")
-    result = uat.run_plugin_tests(
+    result = ue.run_plugin_tests(
         plugin, test_path, all, filter, test, not rhi)
     return result
 

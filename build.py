@@ -23,7 +23,7 @@ def project(name, path, build_path, engine_path, config: unreal.TargetConfigurat
         config = "Development"
 
     project = env.Project(name, path, build_path)
-    uat = unreal.UAT(project.get_short_engine_version(), engine_path)
+    ue = unreal.Unreal(project.get_short_engine_version(), engine_path)
 
     if not platform:
         platform = get_host_platforms()
@@ -36,10 +36,10 @@ def project(name, path, build_path, engine_path, config: unreal.TargetConfigurat
         f"{colors.WARNING}-- Building project {colors.OKGREEN}{project.name}{colors.WARNING} ({colors.OKGREEN}{config}{colors.WARNING}) for {colors.OKGREEN}{platformstext}{colors.ENDC}")
 
     settings = unreal.BuildProjectConfig()
-    settings.config = config
+    settings.configuration = config
     settings.target_platforms = platform
     settings.editor = editor
-    if uat.build_project(project, settings) != 0:
+    if ue.build_project(project, settings) != 0:
         print("-- Failed")
         sys.exit(-1)
     print("-- Succeeded")
@@ -56,14 +56,14 @@ build.add_command(project)
 def plugin(name, path, build_path, engine_path, platform):
     """Packages a plugin for the desired platform. """
     plugin = env.Plugin(name, path, build_path)
-    uat = unreal.UAT(plugin.get_short_engine_version(), engine_path)
+    ue = unreal.Unreal(plugin.get_short_engine_version(), engine_path)
     platformstext = f"for {', '.join(platform)} platforms" if platform else "for default platforms"
     click.echo(
         f"{colors.WARNING}-- Building plugin {colors.OKGREEN}{plugin.name}{colors.WARNING} {platformstext}{colors.ENDC}")
-    
+
     config = unreal.BuildPluginConfig()
     config.target_platforms = platform
-    if uat.build_plugin(plugin, config) != 0:
+    if ue.build_plugin(plugin, config) != 0:
         print("-- Failed")
         sys.exit(-1)
     print("-- Succeeded")
@@ -78,10 +78,10 @@ build.add_command(plugin)
 @click.option('-e', '--engine-path', envvar="CI_ENGINE_PATH", type=click.Path(exists=True), help=f"{colors.OKCYAN}(default: auto-discovered){colors.ENDC}")
 def image(engine_version, engine_path):
     """Builds an Unreal Engine container image """
-    uat = unreal.UAT(engine_version, engine_path)
+    ue = unreal.Unreal(engine_version, engine_path)
     click.echo(
         f"{colors.WARNING}-- Building image for {colors.OKGREEN}{engine_version}{colors.ENDC}")
-    uat.build_image()
+    ue.build_image()
 
 build.add_command(image)
 
