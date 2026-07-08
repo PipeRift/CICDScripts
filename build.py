@@ -20,7 +20,7 @@ def build():
 def project(name, path, build_path, engine_path, config: unreal.TargetConfiguration, platform, all_platforms, editor):
     """Packages a project for the desired platform. """
     if not config:
-        config = "Development"
+        config = unreal.TargetConfiguration.Development
 
     project = env.Project(name, path, build_path)
     ue = unreal.Unreal(project.get_short_engine_version(), engine_path)
