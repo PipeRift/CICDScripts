@@ -1,6 +1,6 @@
 import os
 
-from helpers import env
+from helpers import env, engine
 from helpers.util import *
 from helpers.vault import Vault
 
@@ -31,13 +31,14 @@ def upload(plugin_name, path, zip_path, vault_path):
     vault = Vault(os.path.join(env.project_path, "Vault"), env.vault_token)
 
     print("\n-- Copying files")
-    file = os.path.join(zip_path, f'{plugin.name}_v{plugin.get_version()}_{plugin.get_short_engine_version()}.zip')
-    file_bin = os.path.join(zip_path, f'{plugin.name}_v{plugin.get_version()}_{plugin.get_short_engine_version()}_Bin.zip')
+    short = engine.as_short(plugin.get_ue_version())
+    file = os.path.join(zip_path, f'{plugin.name}_v{plugin.get_version()}_{short}.zip')
+    file_bin = os.path.join(zip_path, f'{plugin.name}_v{plugin.get_version()}_{short}_Bin.zip')
     vault.add([file, file_bin], os.path.join(
         '.', plugin.name, env.commit_ref_name))
 
     print("\n-- Uploading files")
-    vault.push(f"[{plugin.name}] Added packaged files (v{plugin.get_version()} UE{plugin.get_short_engine_version()}). Pipeline: {env.pipeline_url}")
+    vault.push(f"[{plugin.name}] Added packaged files (v{plugin.get_version()} UE{short}). Pipeline: {env.pipeline_url}")
 
 
 vaultCLI.add_command(upload)

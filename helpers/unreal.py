@@ -26,8 +26,23 @@ class TargetType(Enum):
     Server = 4
     Program = 5
 
+class IDE(Enum):
+    # Unknown = 0
+    VisualStudio = 1
+    VSCode = 2
+
+def as_short(full):
+    if not full:
+        return None
+    return '.'.join(full.split('.')[:2])
+
+def as_compact(full):
+    if not full:
+        return None
+    return ''.join(full.split('.')[:2])
 
 def get_default_engine_path_win(version):
+    version = as_short(version)
     import winreg
 
     # Try to find engine in registry
@@ -54,7 +69,7 @@ def get_default_engine_path_win(version):
                     if version in data.get("MandatoryAppFolderName", ""):
                         install_location = data.get("InstallLocation")
                         if os.path.exists(install_location):
-                            return install_location 
+                            return install_location
             except (json.JSONDecodeError, IOError):
                 continue
 
@@ -67,6 +82,15 @@ def get_default_engine_path_linux(version):
     image_engine_path = os.path.join("/home", "ue4", "UnrealEngine")
     if os.path.isdir(image_engine_path):
         return image_engine_path
+
+
+def find_engine_version(engine_path):
+    build_version_file = os.path.join(engine_path, "Engine", "Build", "Build.version")
+    if not os.path.isfile(build_version_file):
+        return "Custom"
+    with open(build_version_file, 'r', encoding='utf-8') as f:
+        data = json.load(f)
+    return f"{data['MajorVersion']}.{data['MinorVersion']}.{data.get('PatchVersion', 0)}"
 
 
 def create_host_project(path, plugins):
@@ -99,6 +123,7 @@ class AutomationError(Exception):
     pass
 
 class GenerateProjectConfig(object):
+    ide = IDE.VisualStudio
     additional_args = []
 
 class BuildProjectConfig(object):
@@ -121,23 +146,40 @@ class BuildPluginConfig(object):
 
 class Unreal(object):
     version = None
-    is_default_engine_path = False
+    is_source_engine = False
     engine_path = None
     uat_file = None
     image_build_file = None
 
-    def __init__(self, version=None, engine_path=None):
+    @classmethod
+    def from_project(cls, project: env.Project, engine_path=None):
+        return Unreal(project.get_ue_version(), engine_path, project.path)
+    @classmethod
+    def from_plugin(cls, plugin: env.Plugin, engine_path=None):
+        return Unreal(plugin.get_ue_version(), engine_path, plugin.path)
+
+    def __init__(self, version=None, engine_path=None, cd = os.getcwd()):
         self.version = version
-        if engine_path:
-            print(f"-- Using custom engine path for version {version}")
+        if self.engine_path:
+            self.is_source_engine = True
             self.engine_path = engine_path
-        else:
-            self.is_default_engine_path = True
-            print(f"-- Finding engine path for version {version}")
+        elif os.path.isdir(self.version):
+            self.is_source_engine = True
+            self.engine_path = self.version
+        else: # Launcher engine
             if system() == "Windows":
                 self.engine_path = get_default_engine_path_win(version)
             elif system() == "Linux":
                 self.engine_path = get_default_engine_path_linux(version)
+
+        if self.is_source_engine:
+            if not os.path.isabs(self.engine_path):
+                self.engine_path = os.path.join(cd, self.engine_path)
+
+            self.version = find_engine_version(self.engine_path)
+            print(f"-- Using source engine path for version {as_short(self.version)}")
+        else:
+            print(f"-- Using launcher engine path for version {as_short(self.version)}")
         print(f"   {self.engine_path}")
 
         if not os.path.isdir(self.engine_path):
@@ -181,13 +223,40 @@ class Unreal(object):
         platform = get_host_platforms()[0] # For now just use the first
         args = [
             f"-project={project.uproject_file}",
-            f"-OutputDir={project.path}/.vscode",
             "-game",
             "-engine",
+            "-mode=GenerateProjectFiles",
             f"{project.name}Editor",
             "Development",
             to_ubt_platform(platform)
         ]
+        if config.ide and config.ide != IDE.VisualStudio:
+            args.append(f"-{config.ide.name}")
+        args.extend(config.additional_args)
+
+        try:
+            self.run_UBT(args)
+        except subprocess.CalledProcessError as e:
+            result = -1
+        return result
+
+    def generate_clang_db(self, project: env.Project, config: GenerateProjectConfig):
+        result = 0
+        platform = get_host_platforms()[0] # For now just use the first
+        args = [
+            f"-project={project.uproject_file}",
+            "-game",
+            "-engine",
+            "-mode=GenerateClangDatabase",
+            f"{project.name}Editor",
+            "Development",
+            to_ubt_platform(platform)
+        ]
+        match config.ide:
+            case IDE.VisualStudio:
+                args.append(f"-OutputDir={project.path}/.vs")
+            case IDE.VSCode:
+                args.append(f"-OutputDir={project.path}/.vscode")
         args.extend(config.additional_args)
 
         try:
@@ -402,7 +471,7 @@ class Unreal(object):
     def list_project_tests(self, project: env.Project, editor=False, config=None):
         self.run_automation(project, ["List"],
                             editor, config, True)
-    
+
     def build_image(self):
         try:
             command = [self.image_build_file]

@@ -3,7 +3,7 @@ import os
 import shutil
 
 from helpers.util import *
-from helpers import env, util
+from helpers import env, util, engine
 
 install('click')
 import click  # NOQA
@@ -47,8 +47,9 @@ def plugin(name, path, build_path, zip_path):
         os.makedirs(zip_path)
 
     print("Remove old packaged Plugin")
-    file = os.path.join(zip_path, f'{plugin.name}_v{plugin.get_version()}_{plugin.get_short_engine_version()}.zip')
-    file_bin = os.path.join(zip_path, f'{plugin.name}_v{plugin.get_version()}_{plugin.get_short_engine_version()}_Bin.zip')
+    short = engine.as_short(plugin.get_ue_version())
+    file = os.path.join(zip_path, f'{plugin.name}_v{plugin.get_version()}_{short}.zip')
+    file_bin = os.path.join(zip_path, f'{plugin.name}_v{plugin.get_version()}_{short}_Bin.zip')
     remove(file)
     remove(file_bin)
 

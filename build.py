@@ -23,7 +23,7 @@ def project(name, path, build_path, engine_path, config: unreal.TargetConfigurat
         config = unreal.TargetConfiguration.Development
 
     project = env.Project(name, path, build_path)
-    ue = unreal.Unreal(project.get_short_engine_version(), engine_path)
+    ue = unreal.Unreal.from_project(project, engine_path)
 
     if not platform:
         platform = get_host_platforms()
@@ -56,7 +56,7 @@ build.add_command(project)
 def plugin(name, path, build_path, engine_path, platform):
     """Packages a plugin for the desired platform. """
     plugin = env.Plugin(name, path, build_path)
-    ue = unreal.Unreal(plugin.get_short_engine_version(), engine_path)
+    ue = unreal.Unreal.from_plugin(plugin, engine_path)
     platformstext = f"for {', '.join(platform)} platforms" if platform else "for default platforms"
     click.echo(
         f"{colors.WARNING}-- Building plugin {colors.OKGREEN}{plugin.name}{colors.WARNING} {platformstext}{colors.ENDC}")
@@ -74,7 +74,7 @@ build.add_command(plugin)
 
 
 @click.command()
-@click.option('-v', '--engine-version', envvar="CI_ENGINE_VERSION", required=True, help=f"{colors.OKCYAN}(default: auto-discovered){colors.ENDC}")
+@click.option('-v', '--engine-version', envvar="CI_ENGINE_VERSION", help=f"{colors.OKCYAN}(default: auto-discovered){colors.ENDC}")
 @click.option('-e', '--engine-path', envvar="CI_ENGINE_PATH", type=click.Path(exists=True), help=f"{colors.OKCYAN}(default: auto-discovered){colors.ENDC}")
 def image(engine_version, engine_path):
     """Builds an Unreal Engine container image """

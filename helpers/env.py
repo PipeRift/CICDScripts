@@ -66,16 +66,8 @@ class Project(object):
     def get_version(self):
         return self.json['VersionName']
 
-    def get_engine_version(self):
+    def get_ue_version(self):
         return self.json['EngineAssociation']
-
-    def get_short_engine_version(self):
-        full = self.get_engine_version()
-        return '.'.join(full.split('.')[:2]) if full else None
-
-    def get_compact_engine_version(self):
-        full = self.get_engine_version()
-        return ''.join(full.split('.')[:2]) if full else None
 
     def get_logs_path(self):
         return os.path.join(self.path, "Saved", "Logs")
@@ -140,16 +132,8 @@ class Plugin(object):
     def get_version(self):
         return self.json['VersionName']
 
-    def get_engine_version(self):
+    def get_ue_version(self):
         return self.json['EngineVersion']
-
-    def get_short_engine_version(self):
-        full = self.get_engine_version()
-        return '.'.join(full.split('.')[:2]) if full else None
-
-    def get_compact_engine_version(self):
-        full = self.get_engine_version()
-        return ''.join(full.split('.')[:2]) if full else None
 
     def get_logs_path(self):
         return f"{self.path}/Saved/Logs"
