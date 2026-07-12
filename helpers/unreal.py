@@ -165,7 +165,7 @@ class Unreal(object):
             self.engine_path = engine_path
         elif os.path.isdir(self.version):
             self.is_source_engine = True
-            self.engine_path = self.version
+            self.engine_path = os.path.dirname(self.version) # Engine Association needs to be inside Engine folder
         else: # Launcher engine
             if system() == "Windows":
                 self.engine_path = get_default_engine_path_win(version)
