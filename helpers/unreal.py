@@ -144,6 +144,12 @@ class BuildPluginConfig(object):
     versioned = True # Do not embed the current engine version into the descriptor
 
 
+class BuildEngineConfig(object):
+    target_platforms = [] # UBT platform names (e.g. "Win64", "Linux"). Empty = current host.
+    configuration = TargetConfiguration.Development
+    additional_args = []
+
+
 class Unreal(object):
     version = None
     is_source_engine = False
@@ -157,13 +163,16 @@ class Unreal(object):
     @classmethod
     def from_plugin(cls, plugin: env.Plugin, engine_path=None):
         return Unreal(plugin.get_ue_version(), engine_path, plugin.path)
+    @classmethod
+    def from_engine_path(cls, engine_path):
+        return Unreal(None, engine_path)
 
     def __init__(self, version=None, engine_path=None, cd = os.getcwd()):
         self.version = version
-        if self.engine_path:
+        if engine_path:
             self.is_source_engine = True
             self.engine_path = engine_path
-        elif os.path.isdir(self.version):
+        elif self.version and os.path.isdir(self.version):
             self.is_source_engine = True
             self.engine_path = os.path.dirname(self.version) # Engine Association needs to be inside Engine folder
         else: # Launcher engine
@@ -386,6 +395,22 @@ class Unreal(object):
     def package_plugin(self, plugin: env.Plugin, package_path):
         ignore = shutil.ignore_patterns('Extras', 'Intermediate', 'Docs', 'Build', 'Vault')
         shutil.copytree(plugin.path, package_path, ignore = ignore)
+
+    def build_engine(self, targets, config: BuildEngineConfig):
+        """Builds engine targets (e.g. ShaderCompileWorker) via UnrealBuildTool."""
+        if not targets:
+            raise AutomationError("No engine targets specified.")
+        result = 0
+        platforms = config.target_platforms if config.target_platforms else [None]
+        for target in targets:
+            for platform in platforms:
+                args = [target, util.to_ubt_platform(platform) or "Win64", config.configuration.name]
+                args.extend(config.additional_args)
+                try:
+                    self.run_UBT(args)
+                except subprocess.CalledProcessError as e:
+                    result = -1
+        return result
 
 
     def run_automation(self, project, commands, editor=False, config=None, headless=True):
