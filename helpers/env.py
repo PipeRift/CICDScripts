@@ -31,11 +31,14 @@ class Project(object):
         self.name = name
         self.path = os.path.abspath(path) if path else os.getcwd()
         if not self.name: # If name is not given, try to resolve it from the folder name
-            self.name = os.path.basename(self.path)
+            for filename in os.listdir(self.path):
+                if filename.endswith('.uproject'):
+                    self.name = filename.removesuffix('.uproject')
+                    break
+            else:
+                self.name = os.path.basename(self.path)
 
-        self.uproject_file = os.path.join(
-            self.path, f"{self.name}.uproject")
-
+        self.uproject_file = os.path.join(self.path, f"{self.name}.uproject")
         if not os.path.isfile(self.uproject_file):
             raise InvalidProjectError(
                 f"Project '{self.name}' not found.\n.uproject file is missing ({self.uproject_file}).")
