@@ -1,8 +1,10 @@
 import sys
 import os
 import json
+import re
 import subprocess
 import shutil
+import configparser
 from platform import system
 from . import env, test_report, util
 from helpers.util import *
@@ -78,10 +80,87 @@ def get_default_engine_path_win(version):
         'ProgramW6432'), "Epic Games", "UE_{}".format(version))
 
 
+def find_linux_engine_installations():
+    """Read the source-build identifier -> path mappings from the Linux/Mac
+    Install.ini used by UnrealVersionSelector. On Linux it lives at
+    ~/.config/Epic/UnrealEngine/Install.ini and maps an EngineAssociation
+    identifier (GUID or arbitrary string) to the engine directory:
+        [Installations]
+        MyCustom419 = /path/to/engine
+    """
+    config_dir = os.environ.get("XDG_CONFIG_HOME") or os.path.join(
+        os.path.expanduser("~"), ".config")
+    install_file = os.path.join(config_dir, "Epic", "UnrealEngine", "Install.ini")
+    if not os.path.isfile(install_file):
+        return {}
+    try:
+        parser = configparser.ConfigParser()
+        parser.read(install_file, encoding="utf-8")
+        if not parser.has_section("Installations"):
+            return {}
+        return {key.strip(): value.strip() for key, value in parser.items("Installations")}
+    except (configparser.Error, IOError) as e:
+        print(f"{colors.WARNING}-- Could not read '{install_file}': {e}{colors.ENDC}")
+        return {}
+
+
+def normalize_version_guid(identifier):
+    # Identifiers may be GUIDs written with or without braces, in any case.
+    return identifier.strip().strip("{}").strip().lower()
+
+
+def is_release_version(identifier):
+    """Launcher-style associations are version numbers, e.g. "5.7" or "5.7.4"."""
+    return bool(identifier) and bool(re.match(r"^\d+\.\d+(\.\d+)*$", identifier))
+
+
 def get_default_engine_path_linux(version):
-    image_engine_path = os.path.join("/home", "ue4", "UnrealEngine")
-    if os.path.isdir(image_engine_path):
-        return image_engine_path
+    # Source / custom builds are registered by identifier (GUID or arbitrary
+    # string) in Install.ini, which maps the identifier to the engine path.
+    if version:
+        for key, path in find_linux_engine_installations().items():
+            if normalize_version_guid(key) == normalize_version_guid(version):
+                if os.path.isdir(path):
+                    print(f"-- Found engine by identifier '{version}' at {path}")
+                    return path
+                print(f"{colors.WARNING}-- Install.ini entry '{key}' -> '{path}' does not exist{colors.ENDC}")
+                break
+
+    # Launcher-style associations are version numbers (e.g. "5.7") that must
+    # match the version of an engine in a default or recommended location.
+    if not is_release_version(version):
+        return None
+
+    short = as_short(version)
+    home = os.path.expanduser("~")
+    candidates = [
+        # Per-user source/installed builds
+        os.path.join(home, "UnrealEngine"),
+        os.path.join(home, f"UE_{short}"),
+        os.path.join(home, "Epic Games", f"UE_{short}"),
+        # System-wide builds
+        os.path.join("/opt", "UnrealEngine"),
+        os.path.join("/opt", f"UE_{short}"),
+        # CI container image
+        os.path.join("/home", "ue4", "UnrealEngine"),
+    ]
+    for candidate in candidates:
+        if not os.path.isdir(candidate):
+            continue
+        uat_file = os.path.join(candidate, "Engine", "Build", "BatchFiles", "RunUAT.sh")
+        if not os.path.isfile(uat_file):
+            print(f"{colors.WARNING}-- Ignoring '{candidate}': no RunUAT.sh{colors.ENDC}")
+            continue
+
+        found_version = find_engine_version(candidate)
+        if found_version == "Custom" or as_short(found_version) != short:
+            print(f"{colors.WARNING}-- Ignoring engine at '{candidate}': version {found_version} does not match {short}{colors.ENDC}")
+            continue
+
+        print(f"-- Found engine for version {as_short(found_version)} at {candidate}")
+        return candidate
+
+    return None
 
 
 def find_engine_version(engine_path):
